@@ -2,7 +2,7 @@
 
 import Cocoa
 
-class ViewController: NSSplitViewController {
+class MainSplitViewController: NSSplitViewController {
 	lazy var itemA: NSSplitViewItem = NSSplitViewItem()
 	lazy var itemB: NSSplitViewItem = NSSplitViewItem()
 
@@ -29,18 +29,19 @@ class ViewController: NSSplitViewController {
 			blue: 1,
 			alpha: 1
 		)
-		
-		
+
 		itemA = NSSplitViewItem(sidebarWithViewController: vcA)
-		itemA.minimumThickness = 100
-		itemA.collapseBehavior = .preferResizingSiblingsWithFixedSplitView
-		
-		itemB = NSSplitViewItem(inspectorWithViewController: vcB)
-		itemB.minimumThickness = 200
+		itemA.minimumThickness = 200
+		itemA.maximumThickness = 300
+		itemA.preferredThicknessFraction = 0.2
+	
+		itemB = NSSplitViewItem(contentListWithViewController: vcB)
+		itemB.canCollapse = false
+		itemB.holdingPriority = .defaultLow
 
 		addSplitViewItem(itemA)
 		addSplitViewItem(itemB)
-		
+
 		let btn = NSButton(
 			image: NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)!,
 			target: self,
@@ -74,3 +75,9 @@ class ViewController: NSSplitViewController {
 
 }
 
+class FileListingViewController: NSTreeController{
+	
+//	override func viewDidLoad() {
+//		self.view = NSOutlineView()
+//	}
+}

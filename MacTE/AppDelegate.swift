@@ -14,7 +14,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 			defer: false
 		)
 		window.title = "Test"
-		let vc = ViewController()
+		let vc = MainSplitViewController()
 		window.contentViewController = vc
 		window.makeKeyAndOrderFront(nil)
 	}
