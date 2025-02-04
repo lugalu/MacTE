@@ -1,11 +1,11 @@
 //Created by Lugalu on 03/02/25.
 
-import Cocoa
+import AppKit
 
 class AppDelegate: NSObject, NSApplicationDelegate {
 	
 	func applicationDidFinishLaunching(_ aNotification: Notification) {
-		let rect = NSRect(origin: .zero, size: .init(width: 200, height: 200))
+		let rect = NSRect(origin: .zero, size: NSScreen.main!.frame.size)
 		
 		let window = NSWindow(
 			contentRect: rect,
@@ -14,7 +14,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 			defer: false
 		)
 		window.title = "Test"
-		
 		let vc = ViewController()
 		window.contentViewController = vc
 		window.makeKeyAndOrderFront(nil)
