@@ -2,7 +2,13 @@
 
 import AppKit
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+extension NSToolbar.Identifier {
+	static let TextEditorIdentifier = NSToolbar.Identifier("TextEditorIdentifier")
+}
+
+class AppDelegate: NSObject, NSApplicationDelegate, NSToolbarItemValidation {
+	
+
 	
 	func applicationDidFinishLaunching(_ aNotification: Notification) {
 		let rect = NSRect(origin: .zero, size: NSScreen.main!.frame.size)
@@ -14,9 +20,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 			defer: false
 		)
 		window.title = "Test"
+		
+		makeToolbar(for: window)
+		
 		let vc = MainSplitViewController()
 		window.contentViewController = vc
 		window.makeKeyAndOrderFront(nil)
+	}
+	
+	func makeToolbar(for window: NSWindow) {
+		let toolbar = NSToolbar(
+			identifier: NSToolbar.Identifier.TextEditorIdentifier
+		)
+		toolbar.delegate = self
+		window.toolbar = toolbar
+		window.toolbar?.validateVisibleItems()
+		window.toolbarStyle = .unifiedCompact
+	}
+	
+	func validateToolbarItem(_ item: NSToolbarItem) -> Bool {
+		return true
 	}
 
 	func applicationWillTerminate(_ aNotification: Notification) {}
@@ -26,4 +49,44 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	}
 
 
+}
+
+extension AppDelegate: NSToolbarDelegate {
+	func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+		let group = NSToolbarItemGroup(
+			itemIdentifier: NSToolbarItem.Identifier.toggleSidebar,
+			titles: [],
+			selectionMode: .selectOne,
+			labels: .none,
+			target: nil,
+			action: #selector(NSSplitViewController.toggleSidebar)
+		)
+		return group
+	}
+	
+	func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+		return [
+			NSToolbarItem.Identifier.toggleSidebar
+		]
+	}
+	
+	func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+		return [
+			NSToolbarItem.Identifier.toggleSidebar
+		]
+	}
+	
+	func toolbarWillAddItem(_ notification: Notification) {
+		// print("~ ~ toolbarWillAddItem: \(notification.userInfo!)")
+	}
+	
+	func toolbarDidRemoveItem(_ notification: Notification) {
+		// print("~ ~ toolbarDidRemoveItem: \(notification.userInfo!)")
+	}
+	
+	func toolbarSelectableItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+		 // Return the identifiers you'd like to show as "selected" when clicked.
+		 // Similar to how they look in typical Preferences windows.
+		 return []
+	 }
 }

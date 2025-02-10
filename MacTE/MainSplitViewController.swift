@@ -1,10 +1,12 @@
 //Created by Lugalu on 03/02/25.
 
-import Cocoa
+import AppKit
 
 class MainSplitViewController: NSSplitViewController {
 	lazy var itemA: NSSplitViewItem = NSSplitViewItem()
 	lazy var itemB: NSSplitViewItem = NSSplitViewItem()
+	
+	
 
 	
 	override func viewDidLoad() {
@@ -14,12 +16,7 @@ class MainSplitViewController: NSSplitViewController {
 		
 		let vcA = NSViewController()
 		vcA.view.wantsLayer = true
-		vcA.view.layer?.backgroundColor = .init(
-			red: 1,
-			green: 0,
-			blue: 0,
-			alpha: 1
-		)
+		vcA.view.layer?.backgroundColor = NSColor.secondarySystemFill.cgColor
 		
 		let vcB = NSViewController()
 		vcB.view.wantsLayer = true
@@ -41,28 +38,9 @@ class MainSplitViewController: NSSplitViewController {
 
 		addSplitViewItem(itemA)
 		addSplitViewItem(itemB)
-
-		let btn = NSButton(
-			image: NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)!,
-			target: self,
-			action: #selector(test)
-		)
-		btn.translatesAutoresizingMaskIntoConstraints = false
-		
-		vcB.view.addSubview(btn)
-		
-		let constraints = [
-			btn.topAnchor.constraint(equalTo: vcB.view.topAnchor, constant: 8),
-			btn.leadingAnchor
-				.constraint(equalTo: vcB.view.leadingAnchor, constant: 8),
-			btn.widthAnchor.constraint(equalToConstant: 200),
-			btn.heightAnchor.constraint(equalToConstant: 100)
-		]
-		
-		NSLayoutConstraint.activate(constraints)
 	}
 
-	@objc func test() {
+	@objc func toggleSidebar() {
 		itemA.isCollapsed.toggle()
 	}
 	
