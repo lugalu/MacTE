@@ -66,13 +66,12 @@ class FileListingViewController: NSViewController {
 	var treeController = NSTreeController()
 	@objc dynamic private(set) var nodes: [FileSystemNode] = TestNodeFactory.getNodes()
 	
+	private(set) var scrollView = NSScrollView()
 	
 	override func viewDidLoad() {
-		let scroll = NSScrollView()
-		self.view = scroll
+		self.view = scrollView
 		
-		scroll.contentView.addSubview(outlineView)
-		makeUI()
+		scrollView.contentView.addSubview(outlineView)
 
 		outlineView.delegate = self
 
@@ -98,13 +97,7 @@ class FileListingViewController: NSViewController {
 		)
 		
 		
-	}
-	
-	func makeUI() {
-//		view.addSubview(outlineView)
-//		outlineView.frame = view.frame
-	}
-	
+	}	
 	
 	func add(node: FileSystemNode ) {
 		self.nodes.append(node)
