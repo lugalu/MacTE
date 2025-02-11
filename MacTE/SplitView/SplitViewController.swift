@@ -97,48 +97,10 @@ class FileListingViewController: NSViewController {
 		)
 		
 		
-	}	
+	}
 	
 	func add(node: FileSystemNode ) {
 		self.nodes.append(node)
-	}
-}
-
-class ProgrammaticTableCellView: NSTableCellView {
-	override init(frame frameRect: NSRect) {
-		super.init(frame: frameRect)
-
-		self.autoresizingMask = .width
-		let iv: NSImageView = NSImageView(frame: NSMakeRect(0, 6, 16, 16))
-		let tf: NSTextField = NSTextField(frame: NSMakeRect(21, 6, 200, 14))
-		let btn: NSButton = NSButton(frame: NSMakeRect(0, 3, 16, 16))
-		iv.imageScaling = .scaleProportionallyUpOrDown
-		iv.imageAlignment = .alignCenter
-		tf.isBordered = false
-		tf.drawsBackground = false
-		btn.cell?.controlSize = .small
-		// btn.bezelStyle = .inline                  // Deprecated?
-		btn.cell?.isBezeled = true                   // Closest property I can find.
-		// btn.cell?.setButtonType(.momentaryPushIn) // Deprecated?
-		btn.setButtonType(.momentaryPushIn)
-		btn.cell?.font = NSFont.boldSystemFont(ofSize: 10)
-		btn.cell?.alignment = .center
-
-		self.imageView = iv
-		self.textField = tf
-		self.addSubview(iv)
-		self.addSubview(tf)
-		self.addSubview(btn)
-	}
-
-	required init?(coder decoder: NSCoder) {
-		fatalError("init(coder:) has not been implemented")
-	}
-
-	var button: NSButton {
-		get {
-			return self.subviews[2] as! NSButton
-		}
 	}
 }
 
@@ -147,21 +109,40 @@ extension FileListingViewController: NSOutlineViewDelegate {
 	func outlineView(_ outlineView: NSOutlineView,
 					 viewFor tableColumn: NSTableColumn?,
 					 item: Any) -> NSView? {
-		var cell: NSTableCellView?
-		
-		cell = NSTableCellView()
-		cell?.wantsLayer = true
-		cell?.layer?.backgroundColor = .init(
-			red: .random(in: 0...1),
-			green: .random(in: 0...1),
-			blue: .random(in: 0...1),
-			alpha: 1
-		)
-	
+		guard let item = item as? NSTreeNode, let data = item.representedObject as? FileSystemNode else {
+			return nil
+		}
+		var cell = OutlineCellNode()
+		cell.configure(name: data.name)
 		
 		return cell
 	}
-	
 }
 
-
+class OutlineCellNode: NSTableCellView {
+	var label: NSTextField = {
+		let txt = NSTextField()
+		txt.translatesAutoresizingMaskIntoConstraints = false
+		txt.isBezeled = false
+		txt.isBordered = false
+		txt.isEditable = false
+		txt.isSelectable = false
+		
+		return txt
+	}()
+	
+	func configure(name: String) {
+		if label.superview == nil {
+			self.addSubview(label)
+			
+			let constraints = [
+				label.topAnchor.constraint(equalTo: self.topAnchor, constant: 2),
+				label.leadingAnchor.constraint(equalTo: self.leadingAnchor,constant: 8),
+				label.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -8),
+				label.trailingAnchor.constraint(equalTo: self.trailingAnchor)
+			]
+			NSLayoutConstraint.activate(constraints)
+		}
+		label.stringValue = name
+	}
+}
