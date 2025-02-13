@@ -44,40 +44,118 @@ class SplitViewController: NSSplitViewController {
 	
 }
 
-class TestNodeFactory {
-	static func getNodes() -> [FileSystemNode] {
-		var arr: [FileSystemNode] = []
-		
-		arr.append(FileSystemNode(name: "Haha", type: .file(fileExtension: "txt")))
-		let folder = FileSystemNode(name: "testr", type: .folder)
-		folder.children = [
-			.init(name: "test2", type: .file(fileExtension: "json")),
-			.init(name: "test3", type: .file(fileExtension: "hm"))
-		]
-		
-		arr.append(folder)
-		
-		return arr
-	}
-}
-
 class FileListingViewController: NSViewController {
 	var outlineView = NSOutlineView()
 	var treeController = NSTreeController()
-	@objc dynamic private(set) var nodes: [FileSystemNode] = TestNodeFactory.getNodes()
+	@objc dynamic private(set) var nodes: [FileSystemNode] = []
 	
 	private(set) var scrollView = NSScrollView()
 	
+	
+	
 	override func viewDidLoad() {
 		self.view = scrollView
+		self.scrollView.documentView = outlineView
+		addOutlineView()
+
 		
-		scrollView.contentView.addSubview(outlineView)
+		let test = NSOpenPanel()
+		test.canChooseFiles = true
+		test.canChooseDirectories = true
+		test.allowsMultipleSelection = true
+		test.allowedContentTypes = [.text, .sourceCode, .folder]
+		
+		test.begin { [weak self] response in
+			guard response == .OK, let self else { return }
+			for url in test.urls {
+				let name = (url.absoluteString as NSString).lastPathComponent
+				guard let isDirectory = try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory else {
+					return
+				}
+				var node: FileSystemNode
+				if isDirectory {
+					node = FileSystemNode(name: name, type: .folder, url: url)
+					self.addChilden(for: node)
+				}else {
+					let components = name.components(separatedBy: ".")
+					guard let name = components.first, let fileExtension = components.last else {
+						continue
+					}
+					node = FileSystemNode(
+						name: name,
+						type: .file(fileExtension: fileExtension),
+						url: url
+					)
+				}
+				
+				self.add(node: node)
+//				self.scrollView.contentView.addSubview(outlineView)
+			}
+		}
 
+	}
+	
+	override func viewDidLayout() {
+		super.viewDidLayout()
+	}
+	
+	func addChilden(for node: FileSystemNode) {
+		let url = node.url
+		guard let enumerator = FileManager.default.enumerator(
+			at: node.url,
+			includingPropertiesForKeys: [.isRegularFileKey],
+			options: [
+				.skipsHiddenFiles,
+				.skipsPackageDescendants,
+				.skipsSubdirectoryDescendants
+			]
+		) else {
+			return
+		}
+		
+		
+		for case let fileURL as URL in enumerator {
+			guard let fileAttributes = try? fileURL.resourceValues(
+				forKeys:[.isDirectoryKey, .nameKey]),
+				  let isDirectory = fileAttributes.isDirectory,
+				  let name = fileAttributes.name
+			else { continue }
+			
+			var childNode: FileSystemNode
+			if isDirectory {
+				childNode = FileSystemNode(
+					name: name,
+					type: .folder,
+					url: fileURL
+				)
+				addChilden(for: childNode)
+				
+			}else {
+				let components = name.components(separatedBy: ".")
+				guard let name = components.first, let fileExtension = components.last else {
+					continue
+				}
+				childNode = FileSystemNode(
+					name: name,
+					type: .file(fileExtension: fileExtension),
+					url: fileURL
+				)
+			}
+			
+			node.children.append(childNode)
+		}
+		
+	}
+	
+	
+	fileprivate func addOutlineView() {
 		outlineView.delegate = self
-
+		outlineView.headerView = nil
+		
 		let nodeColumn = NSTableColumn(identifier: .init("node"))
+		
 		outlineView.addTableColumn(nodeColumn)
-
+		
 		treeController.objectClass = FileSystemNode.self
 		treeController.childrenKeyPath = "children"
 		treeController.leafKeyPath = "isLeaf"
@@ -95,8 +173,6 @@ class FileListingViewController: NSViewController {
 						 to: treeController,
 						 withKeyPath: "arrangedObjects"
 		)
-		
-		
 	}
 	
 	func add(node: FileSystemNode ) {
@@ -112,7 +188,8 @@ extension FileListingViewController: NSOutlineViewDelegate {
 		guard let item = item as? NSTreeNode, let data = item.representedObject as? FileSystemNode else {
 			return nil
 		}
-		var cell = OutlineCellNode()
+		
+		let cell = OutlineCellNode()
 		cell.configure(name: data.name)
 		
 		return cell
