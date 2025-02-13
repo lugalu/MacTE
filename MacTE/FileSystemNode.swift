@@ -17,6 +17,7 @@ class FileSystemNode: NSObject {
 	
 	@objc var isLeaf: Bool { children.isEmpty }
 
+	var url: URL
 	
 	@objc var name: String {
 		var name = baseName
@@ -32,8 +33,9 @@ class FileSystemNode: NSObject {
 	}
 
 	
-	init(name: String,type: FileSystemType) {
+	init(name: String,type: FileSystemType, url: URL) {
 		self.baseName = name
 		self.type = type
+		self.url = url
 	}
 }
