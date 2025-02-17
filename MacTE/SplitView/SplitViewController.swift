@@ -15,7 +15,7 @@ class SplitViewController: NSSplitViewController {
 		vcA.view.wantsLayer = true
 		vcA.view.layer?.backgroundColor = NSColor.secondarySystemFill.cgColor
 		
-		let vcB = NSViewController()
+		let vcB = TestViewController()
 		vcB.view.wantsLayer = true
 		vcB.view.layer?.backgroundColor = .init(
 			red: 0,
@@ -42,6 +42,13 @@ class SplitViewController: NSSplitViewController {
 		itemA.isCollapsed.toggle()
 	}
 	
+}
+
+class TestViewController: NSViewController {
+	
+	override func viewDidLoad() {
+		self.view = CustomTextfield()
+	}
 }
 
 class FileListingViewController: NSViewController {
