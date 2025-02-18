@@ -3,6 +3,9 @@
 import AppKit
 
 struct TextfieldConstants {
+	static let padding: CGFloat = 4
+	
+	//KeyCodes
 	static let backspaceCode = "deleteBackward:"
 	static let deleteCode = "deleteForward:"
 	
@@ -10,7 +13,7 @@ struct TextfieldConstants {
 	static let moveRight = "moveRight:"
 	static let moveUp = "moveUp:"
 	static let moveDown = "moveDown:"
-	
+		
 	static let codes: [String] = [
 		backspaceCode,
 		deleteCode,
@@ -77,22 +80,28 @@ class CustomTextfield: NSView {
 		dirtyRect.fill()
 		storage.foregroundColor = NSColor.textColor
 		
-		container.size = bounds.insetBy(dx: 4, dy: 4).size
+		let padding = TextfieldConstants.padding
+		
+		container.size = bounds.insetBy(dx: padding, dy: padding).size
 	
-		let glyphs = layoutManager.glyphRange(forBoundingRect: bounds, in: container)
-		layoutManager.drawBackground(forGlyphRange: glyphs, at: .init(x: 4, y: 4))
-		layoutManager.drawGlyphs(forGlyphRange: glyphs, at: .init(x: 4, y: 4))
+		let glyphs = layoutManager.glyphRange(forBoundingRect: bounds,
+											  in: container)
+		
+		let paddingPoint = CGPoint(x: padding, y: padding)
+		
+		layoutManager.drawBackground(forGlyphRange: glyphs, at: paddingPoint)
+		layoutManager.drawGlyphs(forGlyphRange: glyphs, at: paddingPoint)
 		layoutManager.showsControlCharacters = true
 		
-		let glyphIndex = layoutManager.glyphIndexForCharacter(at: cursorIndex )
-
+		let glyphIndex = layoutManager.glyphIndexForCharacter(at: cursorIndex)
 		let cursorRect = layoutManager.boundingRect(
 			forGlyphRange: NSRange(location: glyphIndex, length: 0),
 			in: container
 		)
 
 		cursor.frame = .init(
-			origin: cursorRect.origin.applying(.init(translationX: 4, y: 4)),
+			origin: cursorRect.origin.applying(
+				.init(translationX: padding, y: padding)),
 			size: cursorRect.size
 		)
 		cursor.needsDisplay = true
