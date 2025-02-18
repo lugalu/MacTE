@@ -3,8 +3,23 @@
 import AppKit
 
 struct TextfieldConstants {
-	static let backspaceCode = "\u{7F}"
-	static let deleteCode = "\u{8}"
+	static let backspaceCode = "deleteBackward:"
+	static let deleteCode = "deleteForward:"
+	
+	static let moveLeft = "moveLeft:"
+	static let moveRight = "moveRight:"
+	static let moveUp = "moveUp:"
+	static let moveDown = "moveDown:"
+	
+	static let codes: [String] = [
+		backspaceCode,
+		deleteCode,
+		moveLeft,
+		moveRight,
+		moveUp,
+		moveDown
+	]
+
 }
 
 class CustomTextfield: NSView {
@@ -13,7 +28,7 @@ class CustomTextfield: NSView {
 	let storage = NSTextStorage()
 	let container = NSTextContainer(size: .zero)
 	let layoutManager = NSLayoutManager()
-	let cursor = NSTextInsertionIndicator()
+	let cursor = NSTextInsertionIndicator(frame: .zero)
 	
 	var cursorIndex = 0
 	
@@ -27,10 +42,28 @@ class CustomTextfield: NSView {
 		setup()
 	}
 	
-	func setup() {
-		self.addSubview(cursor)
+	override func becomeFirstResponder() -> Bool {
 		cursor.displayMode = .automatic
+
+		needsDisplay = true
+		return super.becomeFirstResponder()
+	}
+	
+	override func resignFirstResponder() -> Bool {
+		cursor.displayMode = .hidden
+		needsDisplay = true
+		return super.resignFirstResponder()
+	}
+	
+	func setup() {
+		addSubview(cursor)
+		cursor.displayMode = .automatic
+		cursor.effectsViewInserter = { view in
+			self.addSubview(view, positioned: .below, relativeTo: self.cursor)
+		}
+		cursor.automaticModeOptions = .showWhileTracking
 		
+		layoutManager.allowsNonContiguousLayout = true
 		container.widthTracksTextView = true
 		container.lineFragmentPadding = 0.2
 		
@@ -48,11 +81,26 @@ class CustomTextfield: NSView {
 		layoutManager.drawBackground(forGlyphRange: glyphs, at: .zero)
 		layoutManager.drawGlyphs(forGlyphRange: glyphs, at: .zero)
 		layoutManager.showsControlCharacters = true
+		
+		let glyphIndex = layoutManager.glyphIndexForCharacter(at: cursorIndex )
+
+		let cursorRect = layoutManager.boundingRect(
+			forGlyphRange: NSRange(location: glyphIndex, length: 0),
+			in: container
+		)
+
+		cursor.frame = .init(
+			origin: cursorRect.origin,
+			size: cursorRect.size
+		)
+		cursor.needsDisplay = true
 	}
 	
 	override func keyDown(with event: NSEvent) {
 		self.inputContext?.handleEvent(event)
 	}
+	
+	
 }
 
 extension CustomTextfield: NSTextInputClient {
@@ -60,17 +108,11 @@ extension CustomTextfield: NSTextInputClient {
 	func insertText(_ string: Any, replacementRange: NSRange) {
 		guard let string = string as? String else { return }
 		
-		//Modifier keys
-		
-		
-		
 		if replacementRange.upperBound >= storage.length {
 			storage.append(.init(string: string))
 		}else {
 			storage.replaceCharacters(in: replacementRange, with: string)
 		}
-		
-		
 		
 		cursorIndex += string.count
 		needsDisplay = true
@@ -118,9 +160,62 @@ extension CustomTextfield: NSTextInputClient {
 	}
 
 	override func doCommand(by selector: Selector) {
-		print("handle commands!")
+		let modifiers = makeModifiers()
+		
+		if modifiers.keys.contains(selector.description) {
+			modifiers[selector.description]?()
+			needsDisplay = true
+			return
+		}
 	}
 	
+	func makeModifiers() -> [String: ()-> Void] {
+		let functions: [() -> Void] = [
+			backSpace,
+			delete,
+			moveLeft,
+			moveRight,
+			moveUp,
+			moveDown
+		]
+		
+		let result = TextfieldConstants.codes.enumerated().reduce(into: [String: () -> Void]()) { dict, value in
+			dict[value.element] = functions[value.offset]
+		}
+		
+		return result
+	}
+	
+	func backSpace() {
+		guard storage.length > 0 else { return }
+	
+		storage.deleteCharacters(in:.init(location: cursorIndex-1, length: 1))
+		cursorIndex -= 1
+	}
+	
+	func delete() {
+		guard cursorIndex < storage.length else { return }
+	
+		storage.deleteCharacters(in: .init(location: cursorIndex, length: 1))
+	}
+	
+	func moveLeft() {
+		guard cursorIndex > 0 else { return }
+		cursorIndex -= 1
+	}
+	
+	func moveRight() {
+		guard cursorIndex < storage.length else { return }
+		cursorIndex += 1
+	}
+	
+	func moveDown() {
+		
+	}
+	
+	func moveUp() {
+		
+	}
 }
 
 
