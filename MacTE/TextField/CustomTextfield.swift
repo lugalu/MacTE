@@ -77,9 +77,11 @@ class CustomTextfield: NSView {
 		dirtyRect.fill()
 		storage.foregroundColor = NSColor.textColor
 		
+		container.size = bounds.insetBy(dx: 4, dy: 4).size
+	
 		let glyphs = layoutManager.glyphRange(forBoundingRect: bounds, in: container)
-		layoutManager.drawBackground(forGlyphRange: glyphs, at: .zero)
-		layoutManager.drawGlyphs(forGlyphRange: glyphs, at: .zero)
+		layoutManager.drawBackground(forGlyphRange: glyphs, at: .init(x: 4, y: 4))
+		layoutManager.drawGlyphs(forGlyphRange: glyphs, at: .init(x: 4, y: 4))
 		layoutManager.showsControlCharacters = true
 		
 		let glyphIndex = layoutManager.glyphIndexForCharacter(at: cursorIndex )
@@ -90,7 +92,7 @@ class CustomTextfield: NSView {
 		)
 
 		cursor.frame = .init(
-			origin: cursorRect.origin,
+			origin: cursorRect.origin.applying(.init(translationX: 4, y: 4)),
 			size: cursorRect.size
 		)
 		cursor.needsDisplay = true
