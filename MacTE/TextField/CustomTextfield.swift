@@ -27,6 +27,7 @@ struct TextfieldConstants {
 	static let codes: [String] = [
 		backspace,
 		delete,
+		wordBackspace,
 		deleteToBeginningOfLine,
 		moveLeft,
 		moveRight,
@@ -196,6 +197,7 @@ extension CustomTextfield: NSTextInputClient {
 		let functions: [() -> Void] = [
 			backSpace,
 			delete,
+			wordBackspace,
 			deleteToBegginingOfLine,
 			moveLeft,
 			moveRight,
@@ -222,6 +224,27 @@ extension CustomTextfield: NSTextInputClient {
 		guard cursorIndex < storage.length else { return }
 	
 		storage.deleteCharacters(in: .init(location: cursorIndex, length: 1))
+	}
+	
+	func wordBackspace() {
+		guard storage.length > 0, cursorIndex <= storage.length else { return }
+		let string = storage.string
+		let upperBound = string.index(string.startIndex, offsetBy: cursorIndex - 1)
+		let range = string.startIndex...upperBound
+		
+		guard let word = string[range]
+			.components(separatedBy: .whitespacesAndNewlines)
+			.last,
+			  !word.isEmpty
+		else { return }
+		
+		let difference = cursorIndex - word.count 
+	
+		
+
+		let deletionRange = difference...cursorIndex-1
+		cursorIndex = difference
+		storage.deleteCharacters(in: NSRange(deletionRange))
 	}
 	
 	func deleteToBegginingOfLine() {
@@ -258,11 +281,9 @@ extension CustomTextfield: NSTextInputClient {
 	}
 	
 	func moveDown() {
-		
 	}
 	
 	func moveUp() {
-		
 	}
 	
 	func addNewLine() {
@@ -277,5 +298,4 @@ extension CustomTextfield: NSTextInputClient {
 		cursorIndex += 1
 	}
 }
-
 
