@@ -1,26 +1,38 @@
 //Created by Lugalu on 17/02/25.
 
 import AppKit
-
+import Foundation
 struct TextfieldConstants {
 	static let padding: CGFloat = 4
 	
 	//KeyCodes
-	static let backspaceCode = "deleteBackward:"
-	static let deleteCode = "deleteForward:"
+	static let backspace = "deleteBackward:"
+	static let delete = "deleteForward:"
+	static let wordBackspace = "deleteWordBackward:"
+	static let wordDelete = "deleteWordForward:"
+	static let deleteToBeginningOfLine = "deleteToBeginningOfLine:"
+	
 	
 	static let moveLeft = "moveLeft:"
 	static let moveRight = "moveRight:"
 	static let moveUp = "moveUp:"
 	static let moveDown = "moveDown:"
+	
+	
+	static let addNewLine = "insertNewline:"
+	/*
+	 deleteBackwardByDecomposingPreviousCharacter = ctr + backspace // future impl.
+	 */
 		
 	static let codes: [String] = [
-		backspaceCode,
-		deleteCode,
+		backspace,
+		delete,
+		deleteToBeginningOfLine,
 		moveLeft,
 		moveRight,
 		moveUp,
-		moveDown
+		moveDown,
+		addNewLine
 	]
 
 }
@@ -66,7 +78,6 @@ class CustomTextfield: NSView {
 		}
 		cursor.automaticModeOptions = .showWhileTracking
 		
-		layoutManager.allowsNonContiguousLayout = true
 		container.widthTracksTextView = true
 		container.lineFragmentPadding = 0.2
 		
@@ -117,13 +128,13 @@ class CustomTextfield: NSView {
 extension CustomTextfield: NSTextInputClient {
 	
 	func insertText(_ string: Any, replacementRange: NSRange) {
-		guard let string = string as? String else { return }
-		
-		if replacementRange.upperBound >= storage.length {
-			storage.append(.init(string: string))
-		}else {
-			storage.replaceCharacters(in: replacementRange, with: string)
+		guard let string = string as? String else {
+			print("doesn't work")
+			return
 		}
+		
+		let attributedString = NSAttributedString(string: string)
+		storage.insert(attributedString, at: cursorIndex)
 		
 		cursorIndex += string.count
 		needsDisplay = true
@@ -172,9 +183,10 @@ extension CustomTextfield: NSTextInputClient {
 
 	override func doCommand(by selector: Selector) {
 		let modifiers = makeModifiers()
-		
-		if modifiers.keys.contains(selector.description) {
-			modifiers[selector.description]?()
+		print(selector.description)
+
+		if let function = modifiers[selector.description] {
+			function()
 			needsDisplay = true
 			return
 		}
@@ -184,10 +196,12 @@ extension CustomTextfield: NSTextInputClient {
 		let functions: [() -> Void] = [
 			backSpace,
 			delete,
+			deleteToBegginingOfLine,
 			moveLeft,
 			moveRight,
 			moveUp,
-			moveDown
+			moveDown,
+			addNewLine
 		]
 		
 		let result = TextfieldConstants.codes.enumerated().reduce(into: [String: () -> Void]()) { dict, value in
@@ -210,6 +224,29 @@ extension CustomTextfield: NSTextInputClient {
 		storage.deleteCharacters(in: .init(location: cursorIndex, length: 1))
 	}
 	
+	func deleteToBegginingOfLine() {
+		guard cursorIndex <= storage.length else { return }
+		let string = storage.string
+		
+		let upperBound = string.index(string.startIndex, offsetBy: cursorIndex - 1)
+		let range = string.startIndex...upperBound
+				
+		let idx = string[range].lastIndex(where: { $0 == "\n" }) ?? string.startIndex
+		
+		let distance = string.distance(
+			from: string.startIndex,
+			to: string.index(after: idx)
+		)
+		
+		let lenght = cursorIndex - distance
+		
+		storage.deleteCharacters(in: .init(location: distance, length: lenght))
+		
+		cursorIndex -= lenght
+		cursorIndex = max(abs(cursorIndex), 0)
+
+	}
+	
 	func moveLeft() {
 		guard cursorIndex > 0 else { return }
 		cursorIndex -= 1
@@ -226,6 +263,18 @@ extension CustomTextfield: NSTextInputClient {
 	
 	func moveUp() {
 		
+	}
+	
+	func addNewLine() {
+		let newLine = NSAttributedString(string: "\n")
+
+		if cursorIndex <= storage.length {
+			storage.insert(newLine, at: cursorIndex)
+		}else {
+			storage.append(newLine)
+		}
+		
+		cursorIndex += 1
 	}
 }
 
