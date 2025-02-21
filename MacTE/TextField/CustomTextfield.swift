@@ -28,6 +28,7 @@ struct TextfieldConstants {
 		backspace,
 		delete,
 		wordBackspace,
+		wordDelete,
 		deleteToBeginningOfLine,
 		moveLeft,
 		moveRight,
@@ -46,6 +47,7 @@ class CustomTextfield: NSView {
 	let layoutManager = NSLayoutManager()
 	let cursor = NSTextInsertionIndicator(frame: .zero)
 	
+	var modifiers: [String: () -> Void] = [:]
 	var cursorIndex = 0
 	
 	override init(frame frameRect: NSRect) {
@@ -84,6 +86,31 @@ class CustomTextfield: NSView {
 		
 		layoutManager.addTextContainer(container)
 		storage.addLayoutManager(layoutManager)
+		
+		self.modifiers = makeModifiers()
+	}
+	
+	func makeModifiers() -> [String: ()-> Void] {
+		let functions: [() -> Void] = [
+			backSpace,
+			delete,
+			wordBackspace,
+			wordDelete,
+			deleteToBegginingOfLine,
+			moveLeft,
+			moveRight,
+			moveUp,
+			moveDown,
+			addNewLine
+		]
+		
+		let result = TextfieldConstants.codes
+			.enumerated()
+			.reduce(into: [String: () -> Void]()) { dict, value in
+			dict[value.element] = functions[value.offset]
+		}
+		
+		return result
 	}
 	
 	override func draw(_ dirtyRect: NSRect) {
@@ -183,7 +210,6 @@ extension CustomTextfield: NSTextInputClient {
 	}
 
 	override func doCommand(by selector: Selector) {
-		let modifiers = makeModifiers()
 		print(selector.description)
 
 		if let function = modifiers[selector.description] {
@@ -193,65 +219,65 @@ extension CustomTextfield: NSTextInputClient {
 		}
 	}
 	
-	func makeModifiers() -> [String: ()-> Void] {
-		let functions: [() -> Void] = [
-			backSpace,
-			delete,
-			wordBackspace,
-			deleteToBegginingOfLine,
-			moveLeft,
-			moveRight,
-			moveUp,
-			moveDown,
-			addNewLine
-		]
-		
-		let result = TextfieldConstants.codes.enumerated().reduce(into: [String: () -> Void]()) { dict, value in
-			dict[value.element] = functions[value.offset]
-		}
-		
-		return result
-	}
+
 	
 	func backSpace() {
 		guard storage.length > 0 else { return }
-	
 		storage.deleteCharacters(in:.init(location: cursorIndex-1, length: 1))
 		cursorIndex -= 1
 	}
 	
 	func delete() {
 		guard cursorIndex < storage.length else { return }
-	
 		storage.deleteCharacters(in: .init(location: cursorIndex, length: 1))
+	}
+	
+	func wordDelete() {
+		guard storage.length > 0, cursorIndex < storage.length else { return }
+		let string = storage.string
+		let lowerBound = string.index(string.startIndex, offsetBy: cursorIndex)
+		let stringRange = lowerBound...
+		
+		guard let word = string[stringRange]
+			.components(separatedBy: .whitespacesAndNewlines)
+			.first,
+			!word.isEmpty
+		else {
+			return
+		}
+		
+		let difference = cursorIndex + word.count-1
+		let deletionRange = NSRange(cursorIndex...difference)
+		
+		storage.deleteCharacters(in: deletionRange)
 	}
 	
 	func wordBackspace() {
 		guard storage.length > 0, cursorIndex <= storage.length else { return }
 		let string = storage.string
-		let upperBound = string.index(string.startIndex, offsetBy: cursorIndex - 1)
+		let upperBound = string.index(string.startIndex,
+									  offsetBy: cursorIndex - 1)
 		let range = string.startIndex...upperBound
 		
 		guard let word = string[range]
 			.components(separatedBy: .whitespacesAndNewlines)
 			.last,
-			  !word.isEmpty
+			!word.isEmpty
 		else { return }
 		
-		let difference = cursorIndex - word.count 
-	
+		let difference = cursorIndex - word.count
+		let deletionRange = NSRange(difference...cursorIndex-1)
 		
-
-		let deletionRange = difference...cursorIndex-1
 		cursorIndex = difference
-		storage.deleteCharacters(in: NSRange(deletionRange))
+		storage.deleteCharacters(in: deletionRange)
 	}
 	
 	func deleteToBegginingOfLine() {
 		guard cursorIndex <= storage.length else { return }
 		let string = storage.string
 		
-		let upperBound = string.index(string.startIndex, offsetBy: cursorIndex - 1)
+		let upperBound = string.index(string.startIndex,
+									  offsetBy: cursorIndex - 1)
 		let range = string.startIndex...upperBound
 				
 		let idx = string[range].lastIndex(where: { $0 == "\n" }) ?? string.startIndex
@@ -280,7 +306,34 @@ extension CustomTextfield: NSTextInputClient {
 		cursorIndex += 1
 	}
 	
+	
 	func moveDown() {
+		guard cursorIndex > 0 else { return }
+		let lineCount = numberOfLines()
+		let numOfGlyphs = layoutManager.numberOfGlyphs
+		let rowSize = numOfGlyphs / lineCount
+		var difference = rowSize % cursorIndex
+		let currentRow = (cursorIndex - difference) / rowSize + 2
+
+		cursorIndex = min(numOfGlyphs, (currentRow) * rowSize + difference )
+	}
+	
+	func numberOfLines() -> Int {
+		var numberOfLines = 0
+		
+		var index = 0
+		let numOfGlyphs = layoutManager.numberOfGlyphs
+		
+		let range: NSRangePointer = .allocate(capacity: 4)
+		
+		while index < numOfGlyphs {
+			layoutManager.lineFragmentRect(forGlyphAt: index,
+										   effectiveRange:  range)
+			index = NSMaxRange(range.pointee)
+			numberOfLines += 1
+		}
+		
+		return numberOfLines
 	}
 	
 	func moveUp() {
