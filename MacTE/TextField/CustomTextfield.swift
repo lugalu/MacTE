@@ -23,7 +23,7 @@ struct TextfieldConstants {
 	/*
 	 deleteBackwardByDecomposingPreviousCharacter = ctr + backspace // future impl.
 	 */
-		
+	
 	static let codes: [String] = [
 		backspace,
 		delete,
@@ -36,7 +36,7 @@ struct TextfieldConstants {
 		moveDown,
 		addNewLine
 	]
-
+	
 }
 
 class CustomTextfield: NSView {
@@ -62,7 +62,7 @@ class CustomTextfield: NSView {
 	
 	override func becomeFirstResponder() -> Bool {
 		cursor.displayMode = .automatic
-
+		
 		needsDisplay = true
 		return super.becomeFirstResponder()
 	}
@@ -83,6 +83,8 @@ class CustomTextfield: NSView {
 		
 		container.widthTracksTextView = true
 		container.lineFragmentPadding = 0.2
+		
+		storage.font = .monospacedSystemFont(ofSize: 14, weight: .regular)
 		
 		layoutManager.addTextContainer(container)
 		storage.addLayoutManager(layoutManager)
@@ -107,8 +109,8 @@ class CustomTextfield: NSView {
 		let result = TextfieldConstants.codes
 			.enumerated()
 			.reduce(into: [String: () -> Void]()) { dict, value in
-			dict[value.element] = functions[value.offset]
-		}
+				dict[value.element] = functions[value.offset]
+			}
 		
 		return result
 	}
@@ -122,7 +124,7 @@ class CustomTextfield: NSView {
 		let padding = TextfieldConstants.padding
 		
 		container.size = bounds.insetBy(dx: padding, dy: padding).size
-	
+		
 		let glyphs = layoutManager.glyphRange(forBoundingRect: bounds,
 											  in: container)
 		
@@ -137,7 +139,7 @@ class CustomTextfield: NSView {
 			forGlyphRange: NSRange(location: glyphIndex, length: 0),
 			in: container
 		)
-
+		
 		cursor.frame = .init(
 			origin: cursorRect.origin.applying(
 				.init(translationX: padding, y: padding)),
@@ -166,9 +168,9 @@ extension CustomTextfield: NSTextInputClient {
 		
 		cursorIndex += string.count
 		needsDisplay = true
-	
+		
 	}
-
+	
 	func setMarkedText(
 		_ string: Any,
 		selectedRange: NSRange,
@@ -176,42 +178,42 @@ extension CustomTextfield: NSTextInputClient {
 	) {
 		print("hm")
 	}
-
-	func unmarkText() {
 	
+	func unmarkText() {
+		
 	}
-
+	
 	func selectedRange() -> NSRange {
 		return .init(location: cursorIndex, length: 0)
 	}
-
+	
 	func markedRange() -> NSRange {
 		return .init()
 	}
-
+	
 	func hasMarkedText() -> Bool {
 		return false
 	}
-
+	
 	func attributedSubstring(forProposedRange range: NSRange, actualRange: NSRangePointer?) -> NSAttributedString? {
 		return nil
 	}
-
+	
 	func validAttributesForMarkedText() -> [NSAttributedString.Key] {
 		return []
 	}
-
+	
 	func firstRect(forCharacterRange range: NSRange, actualRange: NSRangePointer?) -> NSRect {
 		return .zero
 	}
-
+	
 	func characterIndex(for point: NSPoint) -> Int {
 		return 0
 	}
-
+	
 	override func doCommand(by selector: Selector) {
 		print(selector.description)
-
+		
 		if let function = modifiers[selector.description] {
 			function()
 			needsDisplay = true
@@ -219,7 +221,7 @@ extension CustomTextfield: NSTextInputClient {
 		}
 	}
 	
-
+	
 	
 	func backSpace() {
 		guard storage.length > 0 else { return }
@@ -241,7 +243,7 @@ extension CustomTextfield: NSTextInputClient {
 		guard let word = string[stringRange]
 			.components(separatedBy: .whitespacesAndNewlines)
 			.first,
-			!word.isEmpty
+			  !word.isEmpty
 		else {
 			return
 		}
@@ -262,7 +264,7 @@ extension CustomTextfield: NSTextInputClient {
 		guard let word = string[range]
 			.components(separatedBy: .whitespacesAndNewlines)
 			.last,
-			!word.isEmpty
+			  !word.isEmpty
 		else { return }
 		
 		let difference = cursorIndex - word.count
@@ -279,7 +281,7 @@ extension CustomTextfield: NSTextInputClient {
 		let upperBound = string.index(string.startIndex,
 									  offsetBy: cursorIndex - 1)
 		let range = string.startIndex...upperBound
-				
+		
 		let idx = string[range].lastIndex(where: { $0 == "\n" }) ?? string.startIndex
 		
 		let distance = string.distance(
@@ -293,7 +295,7 @@ extension CustomTextfield: NSTextInputClient {
 		
 		cursorIndex -= lenght
 		cursorIndex = max(abs(cursorIndex), 0)
-
+		
 	}
 	
 	func moveLeft() {
@@ -308,25 +310,86 @@ extension CustomTextfield: NSTextInputClient {
 	
 	
 	func moveDown() {
-		guard cursorIndex > 0 else { return }
-		let lineCount = numberOfLines()
-		let numOfGlyphs = layoutManager.numberOfGlyphs
-		let rowSize = numOfGlyphs / lineCount
-		var difference = rowSize % cursorIndex
-		let currentRow = (cursorIndex - difference) / rowSize + 2
-
-		cursorIndex = min(numOfGlyphs, (currentRow) * rowSize + difference )
+		guard storage.length > 0 else { return }
+		
+		let numberOfGlyphs = layoutManager.numberOfGlyphs
+		let lineCount = lineNumber(for: numberOfGlyphs)
+		let cursorLine = lineNumber(for: cursorIndex)
+		
+		guard cursorLine < lineCount else { return }
+		
+		var cursorRange: NSRange? = nil
+		layoutManager
+			.enumerateLineFragments(forGlyphRange: NSRange(0...numberOfGlyphs)) { [weak self] (_,_,_, range, stop) in
+				guard let self else { return }
+				
+				if let validRange = cursorRange {
+					let difference = self.cursorIndex - validRange.lowerBound
+					let newCursor = range.lowerBound + difference
+					self.cursorIndex = clamp(
+						range.lowerBound,
+						value: newCursor,
+						maxValue: range.upperBound
+					)
+					cursorRange = nil
+					stop.pointee = true
+					return
+				}
+				
+				if range.contains(self.cursorIndex) {
+					cursorRange = range
+				}
+				
+			}
 	}
 	
-	func numberOfLines() -> Int {
+	func moveUp() {
+		guard cursorIndex > 0, cursorIndex <= storage.length else { return }
+		
+		let numberOfGlyphs = layoutManager.numberOfGlyphs
+		let cursorLine = lineNumber(for: cursorIndex)
+		
+		guard cursorLine > 1 || lineNumber(for: cursorIndex + 1) > 1 else { return }
+		
+		var previousLine:NSRange? = nil
+		layoutManager
+			.enumerateLineFragments(forGlyphRange: NSRange(0...numberOfGlyphs)) { [weak self] (_,_,_, range, stop) in
+				guard let self else { return }
+				
+				defer {
+					previousLine = range
+				}
+				
+				// for some reason contains wasn't checking it's upperBound so the edgeCase is checked on the if
+				if (range.lowerBound...range.upperBound)
+					.contains(self.cursorIndex) {
+					
+					guard let previousLine else {
+						return
+					}
+					
+					let difference = self.cursorIndex - range.lowerBound
+					let newCursor = previousLine.lowerBound + difference
+					let lastLineEnd = previousLine.upperBound - 1
+					
+					self.cursorIndex = clamp(previousLine.lowerBound,
+											 value: newCursor,
+											 maxValue: lastLineEnd
+					)
+					stop.pointee = true
+					return
+				}
+			}
+	}
+	
+	func lineNumber(for target: Int) -> Int {
 		var numberOfLines = 0
 		
 		var index = 0
-		let numOfGlyphs = layoutManager.numberOfGlyphs
 		
 		let range: NSRangePointer = .allocate(capacity: 4)
 		
-		while index < numOfGlyphs {
+		while index < target {
 			layoutManager.lineFragmentRect(forGlyphAt: index,
 										   effectiveRange:  range)
 			index = NSMaxRange(range.pointee)
@@ -336,12 +399,10 @@ extension CustomTextfield: NSTextInputClient {
 		return numberOfLines
 	}
 	
-	func moveUp() {
-	}
 	
 	func addNewLine() {
 		let newLine = NSAttributedString(string: "\n")
-
+		
 		if cursorIndex <= storage.length {
 			storage.insert(newLine, at: cursorIndex)
 		}else {
