@@ -7,8 +7,7 @@ struct TextfieldConstants {
 	
 	static let padding: CGFloat = 4
 	
-	//KeyCodes
-	
+	//MARK: KeyCodes
 	//Delete
 	static let backspace = "deleteBackward:"
 	static let delete = "deleteForward:"
@@ -26,7 +25,7 @@ struct TextfieldConstants {
 	static let addNewLine = "insertNewline:"
 	// deleteBackwardByDecomposingPreviousCharacter = ctr + backspace // future impl.
 	
-	
+	//MARK: Command Dict
 	static let commands: [String: Command] = [
 		backspace: Backspace(),
 		delete: Delete(),
