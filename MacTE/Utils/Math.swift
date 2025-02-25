@@ -2,7 +2,7 @@
 
 import Foundation
 
-func clamp<T: Numeric & Comparable >(_ minValue: T, value: T, maxValue: T ) -> T {
+func clamp<T: Numeric & Comparable >(_ minValue: T, _ value: T, _ maxValue: T ) -> T {
 	return min( maxValue,
 				max(minValue,
 					value)

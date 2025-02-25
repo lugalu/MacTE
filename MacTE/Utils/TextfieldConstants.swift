@@ -5,7 +5,7 @@ import Foundation
 struct TextfieldConstants {
 	private init(){}
 	
-	static let padding: CGFloat = 4
+	static let padding: CGFloat = 8
 	
 	//MARK: KeyCodes
 	//Delete
