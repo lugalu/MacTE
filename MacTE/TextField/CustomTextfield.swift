@@ -11,7 +11,11 @@ class CustomTextfield: NSView, TextfieldContext {
 	let layoutManager = NSLayoutManager()
 	let cursor = NSTextInsertionIndicator(frame: .zero)
 	
-	var cursorIndex = 0
+	var cursorIndex = 0 {
+		didSet {
+			needsDisplay = true
+		}
+	}
 	
 	
 	override init(frame frameRect: NSRect) {
@@ -50,11 +54,12 @@ class CustomTextfield: NSView, TextfieldContext {
 		
 		storage.font = .monospacedSystemFont(ofSize: 14, weight: .regular)
 		
+		container.layoutManager = layoutManager
 		layoutManager.addTextContainer(container)
 		storage.addLayoutManager(layoutManager)
 	}
 	
-
+	
 	
 	override func draw(_ dirtyRect: NSRect) {
 		super.draw(dirtyRect)
@@ -93,6 +98,15 @@ class CustomTextfield: NSView, TextfieldContext {
 		self.inputContext?.handleEvent(event)
 	}
 	
+	override func mouseDown(with event: NSEvent) {
+		var point = convert(event.locationInWindow, from: nil)
+		point.y = max(0, point.y - TextfieldConstants.padding)
+		point.x = max(0, point.x - TextfieldConstants.padding)
+		
+		let idx = characterIndex(for: point)
+		self.cursorIndex = idx
+		
+	}
 	
 }
 
@@ -108,34 +122,39 @@ extension CustomTextfield: NSTextInputClient {
 		storage.insert(attributedString, at: cursorIndex)
 		
 		cursorIndex += string.count
-		needsDisplay = true
 	}
 	
+	// trigerred by '
 	func setMarkedText(
 		_ string: Any,
 		selectedRange: NSRange,
 		replacementRange: NSRange
 	) {
-		print("hm")
+		
+		print("hm, \(string)", selectedRange, replacementRange)
 	}
 	
 	func unmarkText() {
-		
+		print("unmark?")
 	}
 	
 	func selectedRange() -> NSRange {
+		print("selection")
 		return .init(location: cursorIndex, length: 0)
 	}
 	
 	func markedRange() -> NSRange {
+		//		print("markedRange")
 		return .init()
 	}
 	
+	//called everytime a key is pressed
 	func hasMarkedText() -> Bool {
 		return false
 	}
 	
 	func attributedSubstring(forProposedRange range: NSRange, actualRange: NSRangePointer?) -> NSAttributedString? {
+		print("attributedString")
 		return nil
 	}
 	
@@ -144,19 +163,35 @@ extension CustomTextfield: NSTextInputClient {
 	}
 	
 	func firstRect(forCharacterRange range: NSRange, actualRange: NSRangePointer?) -> NSRect {
-		return .zero
+		print("first rect")
+		return layoutManager
+			.lineFragmentRect(
+				forGlyphAt: range.lowerBound,
+				effectiveRange: actualRange
+			)
 	}
 	
 	func characterIndex(for point: NSPoint) -> Int {
-		return 0
+		
+		let pointer: UnsafeMutablePointer<CGFloat> = .allocate(capacity: 1)
+		pointer.pointee = 1
+		defer{
+			pointer.deallocate()
+		}
+		
+		return  layoutManager
+			.characterIndex(
+				for: point,
+				in: container,
+				fractionOfDistanceBetweenInsertionPoints: nil
+			)
 	}
 	
 	override func doCommand(by selector: Selector) {
 		let commandKey = selector.description
-		
+		print(commandKey)
 		if let command = TextfieldConstants.commands[commandKey] {
 			command.execute(self)
-			needsDisplay = true
 			return
 		}
 	}

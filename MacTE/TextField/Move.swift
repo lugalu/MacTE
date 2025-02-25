@@ -53,8 +53,8 @@ class MoveUp: Command {
 				let lastLineEnd = previousLine.upperBound - 1
 				
 				context.cursorIndex = clamp(previousLine.lowerBound,
-											value: newCursor,
-											maxValue: lastLineEnd
+											newCursor,
+											lastLineEnd
 				)
 				
 				stop.pointee = true
@@ -89,8 +89,8 @@ class MoveDown: Command {
 					let newCursor = range.lowerBound + difference
 					context.cursorIndex = clamp(
 						range.lowerBound,
-						value: newCursor,
-						maxValue: range.upperBound
+						newCursor,
+						range.upperBound
 					)
 					cursorRange = nil
 					stop.pointee = true
