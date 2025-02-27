@@ -7,12 +7,21 @@ class MoveLeft: Command {
 		guard context.cursorIndex > 0 else { return }
 		context.cursorIndex -= 1
 	}
+	
+	func execute(_ context: any TextfieldContext, _ : String?) {
+		execute(context)
+	}
+
 }
 
 class MoveRight: Command {
 	func execute(_ context: any TextfieldContext) {
 		guard context.cursorIndex < context.storage.length else { return }
 		context.cursorIndex += 1
+	}
+	
+	func execute(_ context: any TextfieldContext, _ : String?) {
+		execute(context)
 	}
 }
 
@@ -62,6 +71,10 @@ class MoveUp: Command {
 			}
 		}
 	}
+	
+	func execute(_ context: any TextfieldContext, _ : String?) {
+		execute(context)
+	}
 }
 
 class MoveDown: Command {
@@ -102,7 +115,10 @@ class MoveDown: Command {
 				}
 				
 			}
-		
+	}
+	
+	func execute(_ context: any TextfieldContext, _ : String?) {
+		execute(context)
 	}
 }
 
