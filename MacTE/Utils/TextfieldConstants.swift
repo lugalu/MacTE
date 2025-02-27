@@ -26,17 +26,17 @@ struct TextfieldConstants {
 	// deleteBackwardByDecomposingPreviousCharacter = ctr + backspace // future impl.
 	
 	//MARK: Command Dict
-	static let commands: [String: Command] = [
-		backspace: Backspace(),
-		delete: Delete(),
-		wordBackspace: WordBackspace(),
-		wordDelete: WordDelete(),
-		deleteToBeginningOfLine: DeleteToBegginingOfLine(),
-		moveLeft: MoveLeft(),
-		moveRight: MoveRight(),
-		moveUp: MoveUp(),
-		moveDown: MoveDown(),
-		addNewLine: NewLine()
+	static let commands: [String: () -> Command] = [
+		backspace: { Backspace() },
+		delete: { Delete() } ,
+		wordBackspace: { WordBackspace() },
+		wordDelete: { WordDelete() },
+		deleteToBeginningOfLine: { DeleteToBegginingOfLine() },
+		moveLeft: { MoveLeft() },
+		moveRight: { MoveRight() },
+		moveUp: { MoveUp() },
+		moveDown: { MoveDown() },
+		addNewLine: { NewLine() }
 	]
 	
 }

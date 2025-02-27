@@ -3,16 +3,36 @@
 import AppKit
 
 //MARK: Backspace Operations
-class Backspace: Command {
+class Backspace: Command, Undoable {
+	var commandContext: CommandContext? = nil
+
 	func execute(_ context: any TextfieldContext) {
-		guard context.storage.length > 0 else { return }
+		guard context.storage.length > 0, context.cursorIndex > 0 else { return }
 		let deleteRange = NSRange(location: context.cursorIndex - 1, length: 1)
+		
+		let str = context.storage.string
+		let idx = str.index(str.startIndex, offsetBy: context.cursorIndex - 1)
+		let char = str[idx]
+		
+		commandContext = makeCommandContext(context, String(char))
+		CommandStack.shared.push(command: self)
+		
 		context.storage.deleteCharacters(in: deleteRange)
 		context.cursorIndex -= 1
 	}
+	
+	func execute(_ context: any TextfieldContext, _ : String?) {
+		execute(context)
+	}
+	
+	func undo(_ context: CommandContext) {
+		
+	}
 }
 
-class WordBackspace: Command {
+class WordBackspace: Command, Undoable {
+	var commandContext: CommandContext? = nil
+	
 	func execute(_ context: any TextfieldContext) {
 		let storage = context.storage
 		let cursorIndex = context.cursorIndex
@@ -29,26 +49,61 @@ class WordBackspace: Command {
 			  !word.isEmpty
 		else { return }
 		
+		
+		
 		let difference = cursorIndex - word.count
 		let deletionRange = NSRange(difference...cursorIndex-1)
 		
 		context.cursorIndex = difference
+		
+		commandContext = makeCommandContext(context, word)
+		CommandStack.shared.push(command: self)
+		
 		storage.deleteCharacters(in: deletionRange)
+	}
+	
+	func execute(_ context: any TextfieldContext, _ : String?) {
+		execute(context)
+	}
+	
+	func undo(_ context: CommandContext) {
+		
 	}
 }
 
 
 //MARK: Delete Operations
-class Delete: Command {
+class Delete: Command, Undoable {
+	var commandContext: CommandContext? = nil
+	
 	func execute(_ context: any TextfieldContext) {
 		guard context.cursorIndex < context.storage.length else { return }
 		let deleteRange = NSRange(location: context.cursorIndex, length: 1)
+		
+		
+		let str = context.storage.string
+		let idx = str.index(str.startIndex, offsetBy: context.cursorIndex)
+		let char = str[idx]
+		
+		commandContext = makeCommandContext(context, String(char))
+		CommandStack.shared.push(command: self)
+		
 		context.storage.deleteCharacters(in: deleteRange)
+	}
+	
+	func execute(_ context: any TextfieldContext, _ : String?) {
+		execute(context)
+	}
+	
+	func undo(_ context: CommandContext) {
+		
 	}
 }
 
 
-class WordDelete: Command {
+class WordDelete: Command, Undoable {
+	var commandContext: CommandContext? = nil
+	
 	func execute(_ context: any TextfieldContext) {
 		let storage = context.storage
 		let cursorIndex = context.cursorIndex
@@ -66,14 +121,27 @@ class WordDelete: Command {
 			return
 		}
 		
+		commandContext = makeCommandContext(context, word)
+		CommandStack.shared.push(command: self)
+		
 		let difference = cursorIndex + word.count-1
 		let deletionRange = NSRange(cursorIndex...difference)
 		
 		storage.deleteCharacters(in: deletionRange)
 	}
+	
+	func execute(_ context: any TextfieldContext, _ : String?) {
+		execute(context)
+	}
+	
+	func undo(_ context: CommandContext) {
+		
+	}
 }
 
-class DeleteToBegginingOfLine: Command {
+class DeleteToBegginingOfLine: Command, Undoable {
+	var commandContext: CommandContext? = nil
+	
 	func execute(_ context: any TextfieldContext) {
 		let storage = context.storage
 		let cursorIndex = context.cursorIndex
@@ -88,7 +156,7 @@ class DeleteToBegginingOfLine: Command {
 			string.startIndex,
 			offsetBy: 0
 		)
-		
+
 		var distance: Int
 		
 		if idx == string.startIndex {
@@ -103,7 +171,20 @@ class DeleteToBegginingOfLine: Command {
 		let lenght = cursorIndex - distance
 		
 		context.cursorIndex = max(abs(cursorIndex - lenght), 0)
+		
+		let phrase = String(string[idx...upperBound])
+		commandContext = makeCommandContext(context, phrase)
+		CommandStack.shared.push(command: self)
+		
 		storage.deleteCharacters(in: .init(location: distance, length: lenght))
+	}
+	
+	func execute(_ context: any TextfieldContext, _ : String?) {
+		execute(context)
+	}
+	
+	func undo(_ context: CommandContext) {
+		
 	}
 }
 

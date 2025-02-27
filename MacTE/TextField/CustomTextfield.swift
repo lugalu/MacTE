@@ -144,7 +144,7 @@ extension CustomTextfield: NSTextInputClient {
 	}
 	
 	func markedRange() -> NSRange {
-		//		print("markedRange")
+		print("markedRange")
 		return .init()
 	}
 	
@@ -163,7 +163,6 @@ extension CustomTextfield: NSTextInputClient {
 	}
 	
 	func firstRect(forCharacterRange range: NSRange, actualRange: NSRangePointer?) -> NSRect {
-		print("first rect")
 		return layoutManager
 			.lineFragmentRect(
 				forGlyphAt: range.lowerBound,
@@ -191,7 +190,7 @@ extension CustomTextfield: NSTextInputClient {
 		let commandKey = selector.description
 		print(commandKey)
 		if let command = TextfieldConstants.commands[commandKey] {
-			command.execute(self)
+			command().execute(self)
 			return
 		}
 	}
