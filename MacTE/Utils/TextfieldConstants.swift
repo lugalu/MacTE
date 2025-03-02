@@ -1,11 +1,12 @@
 //Created by Lugalu on 24/02/25.
 
-import Foundation
+import Cocoa
 
 struct TextfieldConstants {
 	private init(){}
 	
 	static let padding: CGFloat = 8
+	private typealias System = NSEvent.ModifierFlags
 	
 	//MARK: KeyCodes
 	//Delete
@@ -23,6 +24,13 @@ struct TextfieldConstants {
 	
 	//Insert
 	static let addNewLine = "insertNewline:"
+	static let paste = System.getName(for: .command) + "v"
+	static let copy = System.getName(for: .command) + "c"
+	static let cut = System.getName(for: .command) + "x"
+	static let undo = System.getName(for: .command) + "z"
+	static let redo = System.getName(for: .command) +
+					  System.getName(for: .shift) +
+					  "z"
 	// deleteBackwardByDecomposingPreviousCharacter = ctr + backspace // future impl.
 	
 	//MARK: Command Dict
@@ -36,7 +44,19 @@ struct TextfieldConstants {
 		moveRight: { MoveRight() },
 		moveUp: { MoveUp() },
 		moveDown: { MoveDown() },
-		addNewLine: { NewLine() }
+		addNewLine: { NewLine() },
+		paste : {
+			print("paste! still WIP")
+			return NewLine()
+		},
+		copy : {
+			print("copy! still WIP")
+			return NewLine()
+		},
+		cut : {
+			print("cut! still WIP")
+			return NewLine()
+		}
 	]
 	
 }
