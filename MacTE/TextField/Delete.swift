@@ -25,7 +25,7 @@ class Backspace: Command, Undoable {
 		execute(context)
 	}
 	
-	func undo(_ context: CommandContext) {
+	func undo() {
 		
 	}
 }
@@ -66,7 +66,7 @@ class WordBackspace: Command, Undoable {
 		execute(context)
 	}
 	
-	func undo(_ context: CommandContext) {
+	func undo() {
 		
 	}
 }
@@ -96,7 +96,7 @@ class Delete: BaseCommand, Undoable {
 		execute(context)
 	}
 	
-	func undo(_ context: CommandContext) {
+	func undo() {
 		
 	}
 }
@@ -135,7 +135,7 @@ class WordDelete: Command, Undoable {
 		execute(context)
 	}
 	
-	func undo(_ context: CommandContext) {
+	func undo() {
 		
 	}
 }
@@ -184,7 +184,7 @@ class DeleteToBegginingOfLine: Command, Undoable {
 		execute(context)
 	}
 	
-	func undo(_ context: CommandContext) {
+	func undo() {
 		
 	}
 }

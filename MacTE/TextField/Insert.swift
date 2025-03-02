@@ -24,7 +24,8 @@ class NewLine: Command, Undoable {
 		execute(context)
 	}
 	
-	func undo(_ context: CommandContext) {
-		
+	func undo() {
+		guard let commandContext else { return }
+		Backspace().execute(commandContext.originalContext)
 	}
 }
