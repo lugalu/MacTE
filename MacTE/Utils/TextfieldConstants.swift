@@ -56,6 +56,14 @@ struct TextfieldConstants {
 		cut : {
 			print("cut! still WIP")
 			return NewLine()
+		},
+		undo: {
+			CommandStack.shared.undo()
+			return NoOperation()
+		},
+		redo: {
+			CommandStack.shared.redo()
+			return NoOperation()
 		}
 	]
 	

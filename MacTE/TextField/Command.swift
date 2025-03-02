@@ -9,7 +9,7 @@ protocol Command {
 
 protocol Undoable {
 	var commandContext: CommandContext? { get }
-	func undo(_ context: CommandContext)
+	func undo()
 }
 
 extension Undoable {
@@ -61,12 +61,27 @@ class CommandStack {
 	}
 	
 	func undo(){
-		
+		guard !undoStack.isEmpty else { return }
+		let command = undoStack.removeFirst()
+		command.undo()
 	}
 	
 	func redo(){
+		guard !redoStack.isEmpty else { return }
+		let command = redoStack.removeFirst()
+		guard let context = command.commandContext else { return }
+		command.execute(context.originalContext, context.modification)
+	}
+	
+}
+
+class NoOperation: Command {
+	func execute(_ context: any TextfieldContext) {
 		
 	}
 	
+	func execute(_ context: any TextfieldContext, _ inserting: String?) {
+		
+	}
 }
 
