@@ -96,8 +96,36 @@ class CustomTextfield: NSView, TextfieldContext {
 	
 	override func keyDown(with event: NSEvent) {
 		self.inputContext?.handleEvent(event)
+		
+		let eventModifiers = event.modifierFlags.getNames()
+		guard !eventModifiers.isEmpty,
+			  let key = event.charactersIgnoringModifiers?.lowercased() else {
+			return
+		}
+
+		var possibilities: Set<String> = [eventModifiers.reduce("", +)]
+		
+		for (idx, modifier) in eventModifiers.enumerated() {
+			possibilities.insert(modifier)
+			
+			var base = modifier
+			for otherModifier in eventModifiers[(idx + 1)...] {
+				base += otherModifier
+			}
+			
+			possibilities.insert(base)
+		}
+		
+		for cmd in Array(possibilities).sorted(by: >) {
+			guard let command = TextfieldConstants.commands[cmd + key] else {
+				continue
+			}
+			
+			command().execute(self)
+			break
+		}
 	}
-	
+		
 	override func mouseDown(with event: NSEvent) {
 		var point = convert(event.locationInWindow, from: nil)
 		point.y = max(0, point.y - TextfieldConstants.padding)

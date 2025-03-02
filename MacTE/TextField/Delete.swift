@@ -73,10 +73,10 @@ class WordBackspace: Command, Undoable {
 
 
 //MARK: Delete Operations
-class Delete: Command, Undoable {
+class Delete: BaseCommand, Undoable {
 	var commandContext: CommandContext? = nil
 	
-	func execute(_ context: any TextfieldContext) {
+	override func execute(_ context: any TextfieldContext) {
 		guard context.cursorIndex < context.storage.length else { return }
 		let deleteRange = NSRange(location: context.cursorIndex, length: 1)
 		
@@ -85,13 +85,14 @@ class Delete: Command, Undoable {
 		let idx = str.index(str.startIndex, offsetBy: context.cursorIndex)
 		let char = str[idx]
 		
+		super.execute(context)
 		commandContext = makeCommandContext(context, String(char))
 		CommandStack.shared.push(command: self)
 		
 		context.storage.deleteCharacters(in: deleteRange)
 	}
 	
-	func execute(_ context: any TextfieldContext, _ : String?) {
+	override func execute(_ context: any TextfieldContext, _ : String?) {
 		execute(context)
 	}
 	

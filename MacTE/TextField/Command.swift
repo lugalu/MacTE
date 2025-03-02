@@ -36,6 +36,17 @@ protocol TextfieldContext: AnyObject {
 }
 
 
+class BaseCommand: Command {
+	func execute(_ context: any TextfieldContext) {
+		
+	}
+	
+	func execute(_ context: any TextfieldContext, _ inserting: String?) {
+		
+	}
+	
+}
+
 class CommandStack {
 	typealias Undo = (Undoable & Command)
 	static let shared = CommandStack()
