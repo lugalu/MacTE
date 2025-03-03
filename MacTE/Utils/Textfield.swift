@@ -16,3 +16,16 @@ func lineNumber(for target: Int, context: TextfieldContext) -> Int {
 	
 	return numberOfLines
 }
+
+func makeStringPermutations(with array: [String]) -> [String] {
+	var result: Set<String> = []
+	
+	
+	array.enumerated().forEach { idx, value in
+		result.insert(value)
+		result.insert(array[idx...].reduce("", +))
+	}
+
+	
+	return Array(result)
+}

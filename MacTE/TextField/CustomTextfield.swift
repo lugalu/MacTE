@@ -10,7 +10,9 @@ class CustomTextfield: NSView, TextfieldContext {
 	let container = NSTextContainer(size: .zero)
 	let layoutManager = NSLayoutManager()
 	let cursor = NSTextInsertionIndicator(frame: .zero)
-	
+
+	var markedText: String? = nil
+	var selectedTextRange: NSRange = NSRange(location: NSNotFound, length: 0)
 	var cursorIndex = 0 {
 		didSet {
 			needsDisplay = true
@@ -26,19 +28,6 @@ class CustomTextfield: NSView, TextfieldContext {
 	required init?(coder: NSCoder) {
 		super.init(coder: coder)
 		setup()
-	}
-	
-	override func becomeFirstResponder() -> Bool {
-		cursor.displayMode = .automatic
-		
-		needsDisplay = true
-		return super.becomeFirstResponder()
-	}
-	
-	override func resignFirstResponder() -> Bool {
-		cursor.displayMode = .hidden
-		needsDisplay = true
-		return super.resignFirstResponder()
 	}
 	
 	func setup() {
@@ -57,66 +46,71 @@ class CustomTextfield: NSView, TextfieldContext {
 		container.layoutManager = layoutManager
 		layoutManager.addTextContainer(container)
 		storage.addLayoutManager(layoutManager)
+		
+		cursor.frame = getCursorRect()
 	}
 	
-	
+	func getCursorRect() -> NSRect {
+		let glyphIndex = layoutManager.glyphIndexForCharacter(at: cursorIndex)
+		let padding = TextfieldConstants.padding
+
+		return layoutManager.boundingRect(
+			forGlyphRange: NSRange(location: glyphIndex, length: 0),
+			in: container
+		).applying(.init(translationX: padding, y: padding))
+	}
 	
 	override func draw(_ dirtyRect: NSRect) {
 		super.draw(dirtyRect)
 		NSColor.textBackgroundColor.setFill()
 		dirtyRect.fill()
+		
 		storage.foregroundColor = NSColor.textColor
 		
 		let padding = TextfieldConstants.padding
-		
 		container.size = bounds.insetBy(dx: padding, dy: padding).size
 		
 		let glyphs = layoutManager.glyphRange(forBoundingRect: bounds,
 											  in: container)
 		
 		let paddingPoint = CGPoint(x: padding, y: padding)
-		
 		layoutManager.drawBackground(forGlyphRange: glyphs, at: paddingPoint)
 		layoutManager.drawGlyphs(forGlyphRange: glyphs, at: paddingPoint)
-		layoutManager.showsControlCharacters = true
 		
-		let glyphIndex = layoutManager.glyphIndexForCharacter(at: cursorIndex)
-		let cursorRect = layoutManager.boundingRect(
-			forGlyphRange: NSRange(location: glyphIndex, length: 0),
-			in: container
-		)
+		cursor.setFrameOrigin(getCursorRect().origin)
 		
-		cursor.frame = .init(
-			origin: cursorRect.origin.applying(
-				.init(translationX: padding, y: padding)),
-			size: cursorRect.size
-		)
-		cursor.needsDisplay = true
+	}
+	
+	override func becomeFirstResponder() -> Bool {
+		cursor.displayMode = .automatic
+		
+		needsDisplay = true
+		return super.becomeFirstResponder()
+	}
+	
+	override func resignFirstResponder() -> Bool {
+		cursor.displayMode = .hidden
+		needsDisplay = true
+		return super.resignFirstResponder()
 	}
 	
 	override func keyDown(with event: NSEvent) {
 		self.inputContext?.handleEvent(event)
+		handleCustomEvents(event)
 		
+	}
+	
+	func handleCustomEvents(_ event: NSEvent) {
 		let eventModifiers = event.modifierFlags.getNames()
 		guard !eventModifiers.isEmpty,
 			  let key = event.charactersIgnoringModifiers?.lowercased() else {
 			return
 		}
 
-		var possibilities: Set<String> = [eventModifiers.reduce("", +)]
-		
-		for (idx, modifier) in eventModifiers.enumerated() {
-			possibilities.insert(modifier)
-			
-			var base = modifier
-			for otherModifier in eventModifiers[(idx + 1)...] {
-				base += otherModifier
-			}
-			
-			possibilities.insert(base)
-		}
-		
-		for cmd in Array(possibilities).sorted(by: >) {
+		let commandPossibilities = makeStringPermutations(with: eventModifiers)
+			.sorted { $0.count > $1.count }
+
+		for cmd in commandPossibilities {
 			guard let command = TextfieldConstants.commands[cmd + key] else {
 				continue
 			}
@@ -147,36 +141,53 @@ extension CustomTextfield: NSTextInputClient {
 		}
 		
 		let attributedString = NSAttributedString(string: string)
-		storage.insert(attributedString, at: cursorIndex)
 		
+		if replacementRange.location != NSNotFound {
+			storage.replaceCharacters(in: replacementRange,
+								   with: attributedString)
+			return
+		}
+		
+		storage.insert(attributedString, at: cursorIndex)
 		cursorIndex += string.count
 	}
 	
-	// trigerred by '
 	func setMarkedText(
 		_ string: Any,
 		selectedRange: NSRange,
 		replacementRange: NSRange
 	) {
-		
-		print("hm, \(string)", selectedRange, replacementRange)
+		guard let string = string as? String else { return }
+		if replacementRange.location != NSNotFound {
+			storage.replaceCharacters(in: replacementRange, with: string)
+		}else {
+			storage.insert(NSAttributedString(string: string), at: cursorIndex)
+		}
+		markedText = string
+		self.selectedTextRange = selectedRange
+		needsDisplay = true
 	}
 	
 	func unmarkText() {
-		print("unmark?")
+		markedText = nil
+		selectedTextRange = .init()
+		
 	}
 	
 	func selectedRange() -> NSRange {
-		print("selection")
-		return .init(location: cursorIndex, length: 0)
+//		print("selection")
+		return selectedTextRange
 	}
 	
 	func markedRange() -> NSRange {
-		print("markedRange")
-		return .init()
+		guard let markedText else {
+			return .init(location: NSNotFound, length: 0)
+		}
+		
+		return NSRange(location: cursorIndex - markedText.count,
+			length: markedText.count)
 	}
 	
-	//called everytime a key is pressed
 	func hasMarkedText() -> Bool {
 		return false
 	}
