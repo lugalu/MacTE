@@ -88,7 +88,7 @@ class Delete: BaseCommand, Undoable {
 		super.execute(context)
 		commandContext = makeCommandContext(context, String(char))
 		CommandStack.shared.push(command: self)
-		
+		context.cursorIndex = context.cursorIndex
 		context.storage.deleteCharacters(in: deleteRange)
 	}
 	
