@@ -2,6 +2,34 @@
 
 import AppKit
 
+class TextSelectionHandler {
+	var head: Int
+	var anchor: Int
+	var markedRange: NSRange? = nil
+	
+	init(head: Int, anchor: Int? = nil) {
+		self.head = head
+		self.anchor = anchor ?? head
+	}
+	
+	var range: NSRange {
+		NSMakeRange(min(head, anchor), abs(head - anchor))
+	}
+	
+	func getValidRange(for eventRange: NSRange) -> NSRange {
+		guard eventRange.location != NSNotFound else {
+			return markedRange ?? range
+		}
+		return eventRange
+	}
+	
+	func invalidate( with newHead: Int) {
+		head = newHead
+		anchor = newHead
+		markedRange = nil
+	}
+}
+
 class CustomTextfield: NSView, TextfieldContext {
 	override var acceptsFirstResponder: Bool { true }
 	override var isFlipped: Bool { true }
@@ -10,9 +38,8 @@ class CustomTextfield: NSView, TextfieldContext {
 	let container = NSTextContainer(size: .zero)
 	let layoutManager = NSLayoutManager()
 	let cursor = NSTextInsertionIndicator(frame: .zero)
-
-	var markedText: String? = nil
-	var selectedTextRange: NSRange = NSRange(location: NSNotFound, length: 0)
+	let selectionHandler = TextSelectionHandler(head: 0)
+	
 	var cursorIndex = 0 {
 		didSet {
 			needsDisplay = true
@@ -34,7 +61,7 @@ class CustomTextfield: NSView, TextfieldContext {
 		addSubview(cursor)
 		cursor.displayMode = .automatic
 		cursor.effectsViewInserter = { view in
-			self.addSubview(view, positioned: .below, relativeTo: self.cursor)
+			self.addSubview(view, positioned: .above, relativeTo: self.cursor)
 		}
 		cursor.automaticModeOptions = .showWhileTracking
 		
@@ -148,8 +175,11 @@ extension CustomTextfield: NSTextInputClient {
 			return
 		}
 		
+		
 		storage.insert(attributedString, at: cursorIndex)
 		cursorIndex += string.count
+		selectionHandler.invalidate(with: cursorIndex)
+		
 	}
 	
 	func setMarkedText(
@@ -157,39 +187,53 @@ extension CustomTextfield: NSTextInputClient {
 		selectedRange: NSRange,
 		replacementRange: NSRange
 	) {
-		guard let string = string as? String else { return }
-		if replacementRange.location != NSNotFound {
-			storage.replaceCharacters(in: replacementRange, with: string)
-		}else {
-			storage.insert(NSAttributedString(string: string), at: cursorIndex)
+		guard let string = string as? String else {
+			return
 		}
-		markedText = string
-		self.selectedTextRange = selectedRange
+		
+		let replacementRange = selectionHandler
+			.getValidRange(for: replacementRange)
+		
+		if string.count == 0 {
+			storage.deleteCharacters(in: replacementRange)
+			unmarkText()
+			cursorIndex = replacementRange.lowerBound
+		}else {
+			selectionHandler.markedRange = NSMakeRange(
+				replacementRange.location,
+				string.count
+			)
+			storage
+				.replaceCharacters(in: replacementRange,
+					with: string
+				)
+			cursorIndex = NSMaxRange(replacementRange) + 1
+		}
+		
+		selectionHandler.head = replacementRange.location +
+		selectedRange.location
+		
+		selectionHandler.anchor = selectionHandler.head + selectedRange.length
+		
+		needsDisplay = true
+	}
+
+	
+	func unmarkText() {
+		selectionHandler.markedRange = nil
 		needsDisplay = true
 	}
 	
-	func unmarkText() {
-		markedText = nil
-		selectedTextRange = .init()
-		
-	}
-	
 	func selectedRange() -> NSRange {
-//		print("selection")
-		return selectedTextRange
+		return selectionHandler.range
 	}
 	
 	func markedRange() -> NSRange {
-		guard let markedText else {
-			return .init(location: NSNotFound, length: 0)
-		}
-		
-		return NSRange(location: cursorIndex - markedText.count,
-			length: markedText.count)
+		return selectionHandler.markedRange ?? NSMakeRange(NSNotFound, 0)
 	}
 	
 	func hasMarkedText() -> Bool {
-		return false
+		return selectionHandler.markedRange != nil
 	}
 	
 	func attributedSubstring(forProposedRange range: NSRange, actualRange: NSRangePointer?) -> NSAttributedString? {
