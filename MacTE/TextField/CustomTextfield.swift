@@ -11,6 +11,10 @@ class CustomTextfield: NSView, TextfieldContext {
 	let layoutManager = NSLayoutManager()
 	let cursor = NSTextInsertionIndicator(frame: .zero)
 	
+	var selectionRange: NSRange? = nil
+	var selectionPath: NSBezierPath? = nil
+
+	
 	var cursorIndex = 0 {
 		didSet {
 			needsDisplay = true
@@ -78,6 +82,31 @@ class CustomTextfield: NSView, TextfieldContext {
 		cursor.setFrameOrigin(getCursorRect().origin)
 		cursor.setFrameSize(.init(width: 100, height: cursor.frame.height))
 		
+		drawSelectionBox()
+	}
+	
+	func drawSelectionBox() {
+		guard let selectionRange, selectionRange.length != 0 else {
+			NSColor.clear.setFill()
+			selectionPath?.fill()
+			selectionPath = nil
+			return
+		}
+		
+		var rect = layoutManager
+			.boundingRect(forGlyphRange: selectionRange, in: container)
+		rect.origin = rect
+			.origin
+			.applying(
+				.init(translationX: TextfieldConstants.padding,
+					  y: TextfieldConstants.padding))
+		
+		NSColor.selectedTextBackgroundColor
+			.withAlphaComponent(0.3)
+			.setFill()
+		selectionPath = NSBezierPath(rect: rect)
+		selectionPath?.fill()
+	
 	}
 	
 	override func becomeFirstResponder() -> Bool {
@@ -120,19 +149,34 @@ class CustomTextfield: NSView, TextfieldContext {
 	}
 		
 	override func mouseDown(with event: NSEvent) {
-		var point = convert(event.locationInWindow, from: nil)
+		let idx = characterIndex(
+			for: windowToPoint(with: event.locationInWindow))
+		
+		self.cursorIndex = idx
+		selectionRange = nil
+		print("down")
+	}
+	
+	func windowToPoint(with event: NSPoint) -> NSPoint {
+		var point = convert(event, from: nil)
 		point.y = max(0, point.y - TextfieldConstants.padding)
 		point.x = max(0, point.x - TextfieldConstants.padding)
 		
-		let idx = characterIndex(for: point)
-		self.cursorIndex = idx
-		
+		return point
 	}
 	
 	override func mouseDragged(with event: NSEvent) {
-		print("hey", event.locationInWindow)
+		let idx = characterIndex(
+			for: windowToPoint(with: event.locationInWindow))
+		
+		selectionRange = NSMakeRange(
+			min(idx, cursorIndex),
+			abs(idx - cursorIndex)
+		)
+		print(selectionRange, idx, cursorIndex)
+		//cursorIndex = selectionRange!.lowerBound
+		needsDisplay = true
 	}
-	
 }
 
 extension CustomTextfield: NSTextInputClient {
@@ -201,12 +245,16 @@ extension CustomTextfield: NSTextInputClient {
 			pointer.deallocate()
 		}
 		
-		return  layoutManager
+		var idx = layoutManager
 			.characterIndex(
 				for: point,
 				in: container,
-				fractionOfDistanceBetweenInsertionPoints: nil
+				fractionOfDistanceBetweenInsertionPoints: pointer
 			)
+		
+		idx += pointer.pointee >= 0.5 ? 1 : 0
+		
+		return idx
 	}
 	
 	override func doCommand(by selector: Selector) {
