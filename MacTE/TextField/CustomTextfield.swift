@@ -2,34 +2,6 @@
 
 import AppKit
 
-class TextSelectionHandler {
-	var head: Int
-	var anchor: Int
-	var markedRange: NSRange? = nil
-	
-	init(head: Int, anchor: Int? = nil) {
-		self.head = head
-		self.anchor = anchor ?? head
-	}
-	
-	var range: NSRange {
-		NSMakeRange(min(head, anchor), abs(head - anchor))
-	}
-	
-	func getValidRange(for eventRange: NSRange) -> NSRange {
-		guard eventRange.location != NSNotFound else {
-			return markedRange ?? range
-		}
-		return eventRange
-	}
-	
-	func invalidate( with newHead: Int) {
-		head = newHead
-		anchor = newHead
-		markedRange = nil
-	}
-}
-
 class CustomTextfield: NSView, TextfieldContext {
 	override var acceptsFirstResponder: Bool { true }
 	override var isFlipped: Bool { true }
@@ -38,7 +10,6 @@ class CustomTextfield: NSView, TextfieldContext {
 	let container = NSTextContainer(size: .zero)
 	let layoutManager = NSLayoutManager()
 	let cursor = NSTextInsertionIndicator(frame: .zero)
-	let selectionHandler = TextSelectionHandler(head: 0)
 	
 	var cursorIndex = 0 {
 		didSet {
@@ -105,6 +76,7 @@ class CustomTextfield: NSView, TextfieldContext {
 		layoutManager.drawGlyphs(forGlyphRange: glyphs, at: paddingPoint)
 		
 		cursor.setFrameOrigin(getCursorRect().origin)
+		cursor.setFrameSize(.init(width: 100, height: cursor.frame.height))
 		
 	}
 	
@@ -157,6 +129,10 @@ class CustomTextfield: NSView, TextfieldContext {
 		
 	}
 	
+	override func mouseDragged(with event: NSEvent) {
+		print("hey", event.locationInWindow)
+	}
+	
 }
 
 extension CustomTextfield: NSTextInputClient {
@@ -178,66 +154,30 @@ extension CustomTextfield: NSTextInputClient {
 		
 		storage.insert(attributedString, at: cursorIndex)
 		cursorIndex += string.count
-		selectionHandler.invalidate(with: cursorIndex)
-		
 	}
 	
 	func setMarkedText(
 		_ string: Any,
 		selectedRange: NSRange,
 		replacementRange: NSRange
-	) {
-		guard let string = string as? String else {
-			return
-		}
-		
-		let replacementRange = selectionHandler
-			.getValidRange(for: replacementRange)
-		
-		if string.count == 0 {
-			storage.deleteCharacters(in: replacementRange)
-			unmarkText()
-			cursorIndex = replacementRange.lowerBound
-		}else {
-			selectionHandler.markedRange = NSMakeRange(
-				replacementRange.location,
-				string.count
-			)
-			storage
-				.replaceCharacters(in: replacementRange,
-					with: string
-				)
-			cursorIndex = NSMaxRange(replacementRange) + 1
-		}
-		
-		selectionHandler.head = replacementRange.location +
-		selectedRange.location
-		
-		selectionHandler.anchor = selectionHandler.head + selectedRange.length
-		
-		needsDisplay = true
-	}
+	) {}
 
 	
-	func unmarkText() {
-		selectionHandler.markedRange = nil
-		needsDisplay = true
-	}
+	func unmarkText() {}
 	
 	func selectedRange() -> NSRange {
-		return selectionHandler.range
+		return .init()
 	}
 	
 	func markedRange() -> NSRange {
-		return selectionHandler.markedRange ?? NSMakeRange(NSNotFound, 0)
+		return .init()
 	}
 	
 	func hasMarkedText() -> Bool {
-		return selectionHandler.markedRange != nil
+		return false
 	}
 	
 	func attributedSubstring(forProposedRange range: NSRange, actualRange: NSRangePointer?) -> NSAttributedString? {
-		print("attributedString")
 		return nil
 	}
 	

@@ -30,6 +30,7 @@ struct CommandContext {
 
 protocol TextfieldContext: AnyObject {
 	var cursorIndex: Int { get set }
+	var cursor: NSTextInsertionIndicator { get }
 	var storage: NSTextStorage { get }
 	var container: NSTextContainer { get }
 	var layoutManager: NSLayoutManager { get }	
