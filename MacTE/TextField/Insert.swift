@@ -8,14 +8,13 @@ class NewLine: Command, Undoable {
 	func execute(_ context: any TextfieldContext) {
 		let newLine = NSAttributedString(string: "\n")
 		
-		if context.cursorIndex <= context.storage.length {
+		if context.cursorIndex < context.storage.length {
 			context.storage.insert(newLine, at: context.cursorIndex)
 		}else {
 			context.storage.append(newLine)
 		}
 		
 		commandContext = makeCommandContext(context, "\n")
-		CommandStack.shared.push(command: self)
 		
 		context.cursorIndex += 1
 	}

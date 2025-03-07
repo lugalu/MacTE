@@ -143,7 +143,7 @@ class CustomTextfield: NSView, TextfieldContext {
 				continue
 			}
 			
-			command().execute(self)
+			pushCommandToStack(command: command())
 			break
 		}
 	}
@@ -173,8 +173,7 @@ class CustomTextfield: NSView, TextfieldContext {
 			min(idx, cursorIndex),
 			abs(idx - cursorIndex)
 		)
-		print(selectionRange, idx, cursorIndex)
-		//cursorIndex = selectionRange!.lowerBound
+
 		needsDisplay = true
 	}
 }
@@ -195,39 +194,11 @@ extension CustomTextfield: NSTextInputClient {
 			return
 		}
 		
-		
 		storage.insert(attributedString, at: cursorIndex)
 		cursorIndex += string.count
 	}
 	
-	func setMarkedText(
-		_ string: Any,
-		selectedRange: NSRange,
-		replacementRange: NSRange
-	) {}
 
-	
-	func unmarkText() {}
-	
-	func selectedRange() -> NSRange {
-		return .init()
-	}
-	
-	func markedRange() -> NSRange {
-		return .init()
-	}
-	
-	func hasMarkedText() -> Bool {
-		return false
-	}
-	
-	func attributedSubstring(forProposedRange range: NSRange, actualRange: NSRangePointer?) -> NSAttributedString? {
-		return nil
-	}
-	
-	func validAttributesForMarkedText() -> [NSAttributedString.Key] {
-		return []
-	}
 	
 	func firstRect(forCharacterRange range: NSRange, actualRange: NSRangePointer?) -> NSRect {
 		return layoutManager
@@ -259,11 +230,46 @@ extension CustomTextfield: NSTextInputClient {
 	
 	override func doCommand(by selector: Selector) {
 		let commandKey = selector.description
-		print(commandKey)
-		if let command = TextfieldConstants.commands[commandKey] {
-			command().execute(self)
+		guard let command = TextfieldConstants.commands[commandKey] else {
 			return
 		}
+		
+		pushCommandToStack(command: command())
+	}
+	
+	func pushCommandToStack(command: Command) {
+		CommandStack.shared.push(command: command, with: self)
+	}
+	
+	
+	//Unused
+	func setMarkedText(
+		_ string: Any,
+		selectedRange: NSRange,
+		replacementRange: NSRange
+	) {}
+
+	
+	func unmarkText() {}
+	
+	func selectedRange() -> NSRange {
+		return .init()
+	}
+	
+	func markedRange() -> NSRange {
+		return .init()
+	}
+	
+	func hasMarkedText() -> Bool {
+		return false
+	}
+	
+	func attributedSubstring(forProposedRange range: NSRange, actualRange: NSRangePointer?) -> NSAttributedString? {
+		return nil
+	}
+	
+	func validAttributesForMarkedText() -> [NSAttributedString.Key] {
+		return []
 	}
 }
 

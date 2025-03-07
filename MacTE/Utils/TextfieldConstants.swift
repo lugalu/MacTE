@@ -46,24 +46,26 @@ struct TextfieldConstants {
 		moveDown: { MoveDown() },
 		addNewLine: { NewLine() },
 		paste : {
-			print("paste! still WIP")
+			//TODO: Implement
 			return NewLine()
 		},
 		copy : {
-			print("copy! still WIP")
+			// TODO: Implement
 			return NewLine()
 		},
 		cut : {
-			print("cut! still WIP")
+			//TODO: Implement
 			return NewLine()
 		},
 		undo: {
+			//TODO: implement
 			CommandStack.shared.undo()
-			return NoOperation()
+			return NewLine()
 		},
 		redo: {
+			//TODO: Implement
 			CommandStack.shared.redo()
-			return NoOperation()
+			return NewLine()
 		}
 	]
 	
