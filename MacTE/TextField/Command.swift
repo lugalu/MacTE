@@ -36,18 +36,6 @@ protocol TextfieldContext: AnyObject {
 	var layoutManager: NSLayoutManager { get }	
 }
 
-
-class BaseCommand: Command {
-	func execute(_ context: any TextfieldContext) {
-		
-	}
-	
-	func execute(_ context: any TextfieldContext, _ inserting: String?) {
-		
-	}
-	
-}
-
 class CommandStack {
 	typealias Undo = (Undoable & Command)
 	static let shared = CommandStack()
@@ -57,8 +45,12 @@ class CommandStack {
 	
 	private init(){}
 	
-	func push(command: Undo) {
-		undoStack.append(command)
+	func push(command: Command, with context: TextfieldContext) {
+		command.execute(context)
+		
+		if command is Undoable {
+			undoStack.append(command as! Undo)
+		}
 	}
 	
 	func undo(){
@@ -75,14 +67,32 @@ class CommandStack {
 	}
 	
 }
+func setMarkedText(
+	_ string: Any,
+	selectedRange: NSRange,
+	replacementRange: NSRange
+) {}
 
-class NoOperation: Command {
-	func execute(_ context: any TextfieldContext) {
-		
-	}
-	
-	func execute(_ context: any TextfieldContext, _ inserting: String?) {
-		
-	}
+
+func unmarkText() {}
+
+func selectedRange() -> NSRange {
+	return .init()
+}
+
+func markedRange() -> NSRange {
+	return .init()
+}
+
+func hasMarkedText() -> Bool {
+	return false
+}
+
+func attributedSubstring(forProposedRange range: NSRange, actualRange: NSRangePointer?) -> NSAttributedString? {
+	return nil
+}
+
+func validAttributesForMarkedText() -> [NSAttributedString.Key] {
+	return []
 }
 

@@ -15,7 +15,6 @@ class Backspace: Command, Undoable {
 		let char = str[idx]
 		
 		commandContext = makeCommandContext(context, String(char))
-		CommandStack.shared.push(command: self)
 		
 		context.storage.deleteCharacters(in: deleteRange)
 		context.cursorIndex -= 1
@@ -56,9 +55,7 @@ class WordBackspace: Command, Undoable {
 		
 		context.cursorIndex = difference
 		
-		commandContext = makeCommandContext(context, word)
-		CommandStack.shared.push(command: self)
-		
+		commandContext = makeCommandContext(context, word)		
 		storage.deleteCharacters(in: deletionRange)
 	}
 	
@@ -73,10 +70,10 @@ class WordBackspace: Command, Undoable {
 
 
 //MARK: Delete Operations
-class Delete: BaseCommand, Undoable {
+class Delete: Command, Undoable {
 	var commandContext: CommandContext? = nil
 	
-	override func execute(_ context: any TextfieldContext) {
+	func execute(_ context: any TextfieldContext) {
 		guard context.cursorIndex < context.storage.length else { return }
 		let deleteRange = NSRange(location: context.cursorIndex, length: 1)
 		
@@ -85,14 +82,12 @@ class Delete: BaseCommand, Undoable {
 		let idx = str.index(str.startIndex, offsetBy: context.cursorIndex)
 		let char = str[idx]
 		
-		super.execute(context)
 		commandContext = makeCommandContext(context, String(char))
-		CommandStack.shared.push(command: self)
 		context.cursorIndex = context.cursorIndex
 		context.storage.deleteCharacters(in: deleteRange)
 	}
 	
-	override func execute(_ context: any TextfieldContext, _ : String?) {
+	func execute(_ context: any TextfieldContext, _ : String?) {
 		execute(context)
 	}
 	
@@ -123,8 +118,6 @@ class WordDelete: Command, Undoable {
 		}
 		
 		commandContext = makeCommandContext(context, word)
-		CommandStack.shared.push(command: self)
-		
 		let difference = cursorIndex + word.count-1
 		let deletionRange = NSRange(cursorIndex...difference)
 		
@@ -175,7 +168,6 @@ class DeleteToBegginingOfLine: Command, Undoable {
 		
 		let phrase = String(string[idx...upperBound])
 		commandContext = makeCommandContext(context, phrase)
-		CommandStack.shared.push(command: self)
 		
 		storage.deleteCharacters(in: .init(location: distance, length: lenght))
 	}
