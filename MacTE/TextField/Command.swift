@@ -33,7 +33,11 @@ protocol TextfieldContext: AnyObject {
 	var cursor: NSTextInsertionIndicator { get }
 	var storage: NSTextStorage { get }
 	var container: NSTextContainer { get }
-	var layoutManager: NSLayoutManager { get }	
+	var layoutManager: NSLayoutManager { get }
+	var selectionRange: NSRange? { get set }
+	var selectionPath: NSBezierPath? { get }
+
+
 }
 
 class CommandStack {

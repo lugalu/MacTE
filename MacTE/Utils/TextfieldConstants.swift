@@ -46,12 +46,10 @@ struct TextfieldConstants {
 		moveDown: { MoveDown() },
 		addNewLine: { NewLine() },
 		paste : {
-			//TODO: Implement
-			return NewLine()
+			return Paste()
 		},
 		copy : {
-			// TODO: Implement
-			return NewLine()
+			return Copy()
 		},
 		cut : {
 			//TODO: Implement
