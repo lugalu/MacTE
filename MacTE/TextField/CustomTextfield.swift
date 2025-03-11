@@ -2,6 +2,9 @@
 
 import AppKit
 
+//TODO: handle when key is pressed with a selectionRange
+//TODO: expose the selectionRange
+
 class CustomTextfield: NSView, TextfieldContext {
 	override var acceptsFirstResponder: Bool { true }
 	override var isFlipped: Bool { true }
