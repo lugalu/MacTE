@@ -30,4 +30,9 @@ func makeStringPermutations(with array: [String]) -> [String] {
 	return Array(result)
 }
 
-
+func makeStringRange(_ string: String, range: NSRange) -> Range<String.Index> {
+	let lowerBound = string.index(string.startIndex, offsetBy: range.lowerBound)
+	let upperBound = string.index(lowerBound, offsetBy: range.length)
+	
+	return lowerBound..<upperBound
+}
