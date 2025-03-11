@@ -52,8 +52,7 @@ struct TextfieldConstants {
 			return Copy()
 		},
 		cut : {
-			//TODO: Implement
-			return NewLine()
+			return Cut()
 		},
 		undo: {
 			//TODO: implement

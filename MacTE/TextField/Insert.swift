@@ -55,20 +55,35 @@ class Copy: Command {
 		guard let selectionRange = context.selectionRange else { return }
 		
 		let string = context.storage.string
-		let lowerBound = string.index( string.startIndex,
-			offsetBy: selectionRange.lowerBound
-		)
-		
-		let upperBound = string.index( lowerBound,
-			offsetBy: selectionRange.length
-		)
-		
-		let newStr = String(string[lowerBound..<upperBound])
-		NSPasteboard.general.clearContents()
-		NSPasteboard.general.setString(newStr, forType: .string)		
+		let range = makeStringRange(string, range: selectionRange)
+		sendToPasteboard(String(string[range]))
+
 	}
 	
 	func execute(_ context: any TextfieldContext, _ inserting: String?) {
 		execute(context)
+	}
+}
+
+class Cut: Command, Undoable {
+	var commandContext: CommandContext? = nil
+	
+	func execute(_ context: any TextfieldContext) {
+		guard let selectionRange = context.selectionRange else { return }
+		
+		let string = context.storage.string
+		let range = makeStringRange(string, range: selectionRange)
+		sendToPasteboard(String(string[range]))
+		
+		context.storage.replaceCharacters(in: selectionRange, with: "")
+		context.cursorIndex = selectionRange.lowerBound
+		context.selectionRange = nil
+	}
+	func execute(_ context: any TextfieldContext, _ inserting: String?) {
+		execute(context)
+	}
+	
+	func undo() {
+		
 	}
 }
