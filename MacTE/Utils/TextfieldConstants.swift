@@ -32,6 +32,7 @@ struct TextfieldConstants {
 					  System.getName(for: .shift) +
 					  "z"
 	// deleteBackwardByDecomposingPreviousCharacter = ctr + backspace // future impl.
+	// move whole word to left or right
 	
 	//MARK: Command Dict
 	static let commands: [String: () -> Command] = [
@@ -45,25 +46,32 @@ struct TextfieldConstants {
 		moveUp: { MoveUp() },
 		moveDown: { MoveDown() },
 		addNewLine: { NewLine() },
-		paste : {
-			return Paste()
-		},
-		copy : {
-			return Copy()
-		},
-		cut : {
-			return Cut()
-		},
+		paste : { return Paste() },
+		copy : { return Copy() },
+		cut : { return Cut() },
 		undo: {
-			//TODO: implement
 			CommandStack.shared.undo()
-			return NewLine()
+			return NoOperation.shared
 		},
 		redo: {
-			//TODO: Implement
 			CommandStack.shared.redo()
-			return NewLine()
+			return NoOperation.shared
 		}
 	]
 	
+}
+
+class NoOperation: Command {
+	static let shared = NoOperation()
+	
+	
+	private init() {}
+	
+	func execute(_ context: any TextfieldContext) {
+		return
+	}
+	
+	func execute(_ context: any TextfieldContext, _ inserting: String?) {
+		return
+	}
 }
