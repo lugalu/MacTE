@@ -36,3 +36,19 @@ func makeStringRange(_ string: String, range: NSRange) -> Range<String.Index> {
 	
 	return lowerBound..<upperBound
 }
+
+func isValid(range: NSRange) -> Bool {
+	return range.location != NSNotFound && range.length > 0
+}
+
+func deleteSelection(_ context: any TextfieldContext) -> Bool {
+	guard let range = context.selectionRange,
+		  isValid(range: range)
+	else { return false }
+	
+	context.storage.deleteCharacters(in: range)
+	context.cursorIndex = range.location
+	context.selectionRange = nil
+	
+	return true
+}

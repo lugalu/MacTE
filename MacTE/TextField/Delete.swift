@@ -7,6 +7,12 @@ class Backspace: Command, Undoable {
 	var commandContext: CommandContext? = nil
 
 	func execute(_ context: any TextfieldContext) {
+		if !deleteSelection(context) {
+			deleteSingle(context)
+		}
+	}
+	
+	private func deleteSingle(_ context: any TextfieldContext) {
 		guard context.storage.length > 0, context.cursorIndex > 0 else { return }
 		let deleteRange = NSRange(location: context.cursorIndex - 1, length: 1)
 		
@@ -18,7 +24,7 @@ class Backspace: Command, Undoable {
 		
 		context.storage.deleteCharacters(in: deleteRange)
 		context.cursorIndex -= 1
-	}
+	}	
 	
 	func execute(_ context: any TextfieldContext, _ : String?) {
 		execute(context)
@@ -48,14 +54,12 @@ class WordBackspace: Command, Undoable {
 			  !word.isEmpty
 		else { return }
 		
-		
-		
 		let difference = cursorIndex - word.count
 		let deletionRange = NSRange(difference...cursorIndex-1)
 		
 		context.cursorIndex = difference
 		
-		commandContext = makeCommandContext(context, word)		
+		commandContext = makeCommandContext(context, word)
 		storage.deleteCharacters(in: deletionRange)
 	}
 	
@@ -74,6 +78,12 @@ class Delete: Command, Undoable {
 	var commandContext: CommandContext? = nil
 	
 	func execute(_ context: any TextfieldContext) {
+		if !deleteSelection(context) {
+			deleteSingle(context)
+		}
+	}
+	
+	func deleteSingle(_ context: any TextfieldContext) {
 		guard context.cursorIndex < context.storage.length else { return }
 		let deleteRange = NSRange(location: context.cursorIndex, length: 1)
 		

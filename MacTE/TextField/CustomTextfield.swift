@@ -158,7 +158,6 @@ class CustomTextfield: NSView, TextfieldContext {
 		
 		self.cursorIndex = idx
 		selectionRange = nil
-		print("down")
 	}
 	
 	func windowToPoint(with event: NSPoint) -> NSPoint {
@@ -172,7 +171,7 @@ class CustomTextfield: NSView, TextfieldContext {
 	override func mouseDragged(with event: NSEvent) {
 		let idx = characterIndex(
 			for: windowToPoint(with: event.locationInWindow))
-		
+
 		selectionRange = NSMakeRange(
 			min(idx, cursorIndex),
 			abs(idx - cursorIndex)
@@ -186,7 +185,6 @@ extension CustomTextfield: NSTextInputClient {
 	
 	func insertText(_ string: Any, replacementRange: NSRange) {
 		guard let string = string as? String else {
-			print("doesn't work")
 			return
 		}
 		
