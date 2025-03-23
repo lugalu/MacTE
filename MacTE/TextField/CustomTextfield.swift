@@ -188,11 +188,13 @@ extension CustomTextfield: NSTextInputClient {
 			return
 		}
 		
-		let attributedString = NSAttributedString(string: string)
+		_ = deleteSelection(self)
 		
+		let attributedString = NSAttributedString(string: string)
 		if replacementRange.location != NSNotFound {
 			storage.replaceCharacters(in: replacementRange,
-								   with: attributedString)
+								   with: attributedString
+			)
 			return
 		}
 		
