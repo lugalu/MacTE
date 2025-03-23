@@ -2,9 +2,19 @@
 
 import AppKit
 
-//TODO: handle when key is pressed with a selectionRange
-//TODO: expose the selectionRange
-//TODO: figure a way for Undo Redo
+
+/*
+ TODO: list of following for UNDO
+ - Cut, Delete, Backspace, WordBackspace, WordDelete, DeleteBeggining of line we reinsert the text, should be easy
+	- can be achieved by creating a struct that stores the cursor position and the removed string, can be reutilized by all
+ - Insert, Paste, NewLine
+	- delete the inserted text, basically the same as above
+ - Insert Past, Newline with Selection,
+  - First we delete the insert then reinsert the previous text, the struct from above can contain the details for this OP, we just change context based on the selection!
+ 
+ TODO: figure out how to pipe to REDO
+ */
+
 
 class CustomTextfield: NSView, TextfieldContext {
 	override var acceptsFirstResponder: Bool { true }
