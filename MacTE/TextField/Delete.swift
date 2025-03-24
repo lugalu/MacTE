@@ -2,37 +2,62 @@
 
 import AppKit
 
+
+func test(commandContext: DestructiveUndoData, context: any TextfieldContext) {
+	context.storage.insertOrAppend(
+		at: commandContext.startCursorPos,
+		with: commandContext.deletedString
+	)
+	context.cursorIndex = commandContext.startCursorPos + commandContext.deletedString.count
+}
+
 //MARK: Backspace Operations
 class Backspace: Command, Undoable {
-	var commandContext: CommandContext? = nil
+	private var commandContext: DestructiveUndoData? = nil
 
 	func execute(_ context: any TextfieldContext) {
-		guard !deleteSelection(context) else { return }
+		let (didDelete, deletedString) = deleteSelection(context)
+		guard !didDelete else {
+			if let deletedString {
+				commandContext = DestructiveUndoData(
+					startCursorPos: context.cursorIndex,
+					deletedString: deletedString
+				)
+			}
+			return
+		}
 		
 		guard context.storage.length > 0, context.cursorIndex > 0 else { return }
 		let deleteRange = NSRange(location: context.cursorIndex - 1, length: 1)
 		
 		let str = context.storage.string
 		let idx = str.index(str.startIndex, offsetBy: context.cursorIndex - 1)
-		let char = str[idx]
-		
-		commandContext = makeCommandContext(context, String(char))
-		
+		let char = String(str[idx])
+				
 		context.storage.deleteCharacters(in: deleteRange)
 		context.cursorIndex -= 1
+		commandContext = DestructiveUndoData(
+			startCursorPos: context.cursorIndex,
+			deletedString: char
+		)
 	}
 	
 	func execute(_ context: any TextfieldContext, _ : String?) {
 		execute(context)
 	}
 	
-	func undo() {
+	func undo(_ context: TextfieldContext) {
+		guard let commandContext else { return }
+		test(commandContext: commandContext, context: context)
+	}
+	
+	func redo(_ context: TextfieldContext){
 		
 	}
 }
 
 class WordBackspace: Command, Undoable {
-	var commandContext: CommandContext? = nil
+	private var commandContext: DestructiveUndoData? = nil
 	
 	func execute(_ context: any TextfieldContext) {
 		let storage = context.storage
@@ -53,9 +78,16 @@ class WordBackspace: Command, Undoable {
 		let difference = cursorIndex - word.count
 		let deletionRange = NSRange(difference...cursorIndex-1)
 		
+		let targetStr = NSString(string: context.storage.string)
+			.substring(with: deletionRange)
+		
+		commandContext = DestructiveUndoData(
+			startCursorPos: difference,
+			deletedString: targetStr
+		)
+		
 		context.cursorIndex = difference
 		
-		commandContext = makeCommandContext(context, word)
 		storage.deleteCharacters(in: deletionRange)
 	}
 	
@@ -63,7 +95,12 @@ class WordBackspace: Command, Undoable {
 		execute(context)
 	}
 	
-	func undo() {
+	func undo(_ context: TextfieldContext) {
+		guard let commandContext else { return }
+		test(commandContext: commandContext, context: context)
+	}
+	
+	func redo(_ context: TextfieldContext) {
 		
 	}
 }
@@ -71,10 +108,12 @@ class WordBackspace: Command, Undoable {
 
 //MARK: Delete Operations
 class Delete: Command, Undoable {
-	var commandContext: CommandContext? = nil
 	
 	func execute(_ context: any TextfieldContext) {
-		guard !deleteSelection(context) else { return }
+		let (didDelete, deletedString) = deleteSelection(context)
+		guard !didDelete else {
+			return
+		}
 		
 		guard context.cursorIndex < context.storage.length else { return }
 		let deleteRange = NSRange(location: context.cursorIndex, length: 1)
@@ -84,7 +123,6 @@ class Delete: Command, Undoable {
 		let idx = str.index(str.startIndex, offsetBy: context.cursorIndex)
 		let char = str[idx]
 		
-		commandContext = makeCommandContext(context, String(char))
 		context.cursorIndex = context.cursorIndex
 		context.storage.deleteCharacters(in: deleteRange)
 	}
@@ -93,14 +131,17 @@ class Delete: Command, Undoable {
 		execute(context)
 	}
 	
-	func undo() {
+	func undo(_ context: TextfieldContext) {
+		
+	}
+	
+	func redo(_ context: TextfieldContext) {
 		
 	}
 }
 
 
 class WordDelete: Command, Undoable {
-	var commandContext: CommandContext? = nil
 	
 	func execute(_ context: any TextfieldContext) {
 		let storage = context.storage
@@ -119,7 +160,6 @@ class WordDelete: Command, Undoable {
 			return
 		}
 		
-		commandContext = makeCommandContext(context, word)
 		let difference = cursorIndex + word.count-1
 		let deletionRange = NSRange(cursorIndex...difference)
 		
@@ -130,13 +170,16 @@ class WordDelete: Command, Undoable {
 		execute(context)
 	}
 	
-	func undo() {
+	func undo(_ context: TextfieldContext) {
+		
+	}
+	
+	func redo(_ context: TextfieldContext) {
 		
 	}
 }
 
 class DeleteToBegginingOfLine: Command, Undoable {
-	var commandContext: CommandContext? = nil
 	
 	func execute(_ context: any TextfieldContext) {
 		let storage = context.storage
@@ -169,7 +212,6 @@ class DeleteToBegginingOfLine: Command, Undoable {
 		context.cursorIndex = max(abs(cursorIndex - lenght), 0)
 		
 		let phrase = String(string[idx...upperBound])
-		commandContext = makeCommandContext(context, phrase)
 		
 		storage.deleteCharacters(in: .init(location: distance, length: lenght))
 	}
@@ -178,7 +220,11 @@ class DeleteToBegginingOfLine: Command, Undoable {
 		execute(context)
 	}
 	
-	func undo() {
+	func undo(_ context: TextfieldContext) {
+		
+	}
+	
+	func redo(_ context: TextfieldContext) {
 		
 	}
 }

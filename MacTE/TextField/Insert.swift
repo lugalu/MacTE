@@ -3,14 +3,12 @@
 import AppKit
 
 class NewLine: Command, Undoable {
-	var commandContext: CommandContext? = nil
 	
 	func execute(_ context: any TextfieldContext) {
 		_ = deleteSelection(context)
 		
 		let newLine = NSAttributedString(string: "\n")
 		context.storage.insertOrAppend(at: context.cursorIndex, with: newLine)
-		commandContext = makeCommandContext(context, "\n")
 		context.cursorIndex += 1
 	}
 	
@@ -18,14 +16,16 @@ class NewLine: Command, Undoable {
 		execute(context)
 	}
 	
-	func undo() {
-		guard let commandContext else { return }
-		Backspace().execute(commandContext.originalContext)
+	func undo(_ context: TextfieldContext) {
+		
+	}
+	
+	func redo(_ context: TextfieldContext) {
+		
 	}
 }
 
 class Paste: Command, Undoable {
-	var commandContext: CommandContext? = nil
 	
 	func execute(_ context: any TextfieldContext) {
 		guard let original = NSPasteboard.general.string(forType: .string)
@@ -42,7 +42,11 @@ class Paste: Command, Undoable {
 		execute(context)
 	}
 	
-	func undo() {
+	func undo(_ context: TextfieldContext) {
+		
+	}
+	
+	func redo(_ context: TextfieldContext) {
 		
 	}
 }
@@ -62,7 +66,6 @@ class Copy: Command {
 }
 
 class Cut: Command, Undoable {
-	var commandContext: CommandContext? = nil
 	
 	func execute(_ context: any TextfieldContext) {
 		guard let selectionRange = context.selectionRange else { return }
@@ -78,7 +81,11 @@ class Cut: Command, Undoable {
 		execute(context)
 	}
 	
-	func undo() {
+	func undo(_ context: TextfieldContext) {
+		
+	}
+	
+	func redo(_ context: TextfieldContext) {
 		
 	}
 }

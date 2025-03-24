@@ -3,7 +3,20 @@
 import AppKit
 
 
+struct DestructiveUndoData {
+	let startCursorPos: Int
+	let deletedString: String
+}
+
+struct ConstructiveUndoData {
+	let cursorPosition: Int
+	let insertedString: Int
+	let removedString: DestructiveUndoData?
+}
+
 /*
+ TODO: Check if the Base OP, UNDO, and REDO were a success if so we append to the stacks!
+
  TODO: list of following for UNDO
  - Cut, Delete, Backspace, WordBackspace, WordDelete, DeleteBeggining of line we reinsert the text, should be easy
 	- can be achieved by creating a struct that stores the cursor position and the removed string, can be reutilized by all
@@ -11,6 +24,7 @@ import AppKit
 	- delete the inserted text, basically the same as above
  - Insert Past, Newline with Selection,
   - First we delete the insert then reinsert the previous text, the struct from above can contain the details for this OP, we just change context based on the selection!
+ 
  
  TODO: figure out how to pipe to REDO
  */
@@ -157,7 +171,7 @@ class CustomTextfield: NSView, TextfieldContext {
 				continue
 			}
 			
-			pushCommandToStack(command: command())
+			pushCommandToStack(command: command(self))
 			break
 		}
 	}
@@ -248,7 +262,7 @@ extension CustomTextfield: NSTextInputClient {
 			return
 		}
 		
-		pushCommandToStack(command: command())
+		pushCommandToStack(command: command(self))
 	}
 	
 	func pushCommandToStack(command: Command) {

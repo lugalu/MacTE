@@ -35,26 +35,28 @@ struct TextfieldConstants {
 	// move whole word to left or right
 	
 	//MARK: Command Dict
-	static let commands: [String: () -> Command] = [
-		backspace: { Backspace() },
-		delete: { Delete() } ,
-		wordBackspace: { WordBackspace() },
-		wordDelete: { WordDelete() },
-		deleteToBeginningOfLine: { DeleteToBegginingOfLine() },
-		moveLeft: { MoveLeft() },
-		moveRight: { MoveRight() },
-		moveUp: { MoveUp() },
-		moveDown: { MoveDown() },
-		addNewLine: { NewLine() },
-		paste : { return Paste() },
-		copy : { return Copy() },
-		cut : { return Cut() },
-		undo: {
-			CommandStack.shared.undo()
+	static let commands: [String: (_: TextfieldContext?) -> Command] = [
+		backspace: { _ in Backspace() },
+		delete: { _ in Delete() } ,
+		wordBackspace: { _ in WordBackspace() },
+		wordDelete: { _ in WordDelete() },
+		deleteToBeginningOfLine: { _ in DeleteToBegginingOfLine() },
+		moveLeft: { _ in MoveLeft() },
+		moveRight: { _ in MoveRight() },
+		moveUp: { _ in MoveUp() },
+		moveDown: { _ in MoveDown() },
+		addNewLine: { _ in NewLine() },
+		paste : { _ in Paste() },
+		copy : { _ in Copy() },
+		cut : { _ in Cut() },
+		undo: { context in
+			guard let context else { return NoOperation.shared }
+			CommandStack.shared.undo(with: context)
 			return NoOperation.shared
 		},
-		redo: {
-			CommandStack.shared.redo()
+		redo: { context in
+			guard let context else { return NoOperation.shared }
+			CommandStack.shared.redo(with: context)
 			return NoOperation.shared
 		}
 	]

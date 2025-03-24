@@ -8,24 +8,8 @@ protocol Command {
 }
 
 protocol Undoable {
-	var commandContext: CommandContext? { get }
-	func undo()
-}
-
-extension Undoable {
-	func makeCommandContext(_ context: TextfieldContext, _ string: String?) -> CommandContext {
-		return CommandContext(
-			originalContext: context,
-			location: context.cursorIndex,
-			modification: string
-		)
-	}
-}
-
-struct CommandContext {
-	var originalContext: TextfieldContext
-	var location: Int
-	var modification: String?
+	func undo(_ context: TextfieldContext)
+	func redo(_ context: TextfieldContext)
 }
 
 protocol TextfieldContext: AnyObject {
@@ -36,8 +20,6 @@ protocol TextfieldContext: AnyObject {
 	var layoutManager: NSLayoutManager { get }
 	var selectionRange: NSRange? { get set }
 	var selectionPath: NSBezierPath? { get }
-
-
 }
 
 class CommandStack {
@@ -51,52 +33,26 @@ class CommandStack {
 	
 	func push(command: Command, with context: TextfieldContext) {
 		command.execute(context)
+		redoStack = []
 		
 		if command is Undoable {
 			undoStack.append(command as! Undo)
 		}
 	}
 	
-	func undo(){
+	func undo(with context: TextfieldContext){
 		guard !undoStack.isEmpty else { return }
-		let command = undoStack.removeFirst()
-		command.undo()
+		let command = undoStack.removeLast()
+		command.undo(context)
+		redoStack.append(command)
 	}
 	
-	func redo(){
+	func redo(with context: TextfieldContext){
 		guard !redoStack.isEmpty else { return }
-		let command = redoStack.removeFirst()
-		guard let context = command.commandContext else { return }
-		command.execute(context.originalContext, context.modification)
+//		let command = redoStack.removeFirst()
+		//guard let context = command.commandContext else { return }
+		//command.execute(context.originalContext, context.modification)
 	}
 	
-}
-func setMarkedText(
-	_ string: Any,
-	selectedRange: NSRange,
-	replacementRange: NSRange
-) {}
-
-
-func unmarkText() {}
-
-func selectedRange() -> NSRange {
-	return .init()
-}
-
-func markedRange() -> NSRange {
-	return .init()
-}
-
-func hasMarkedText() -> Bool {
-	return false
-}
-
-func attributedSubstring(forProposedRange range: NSRange, actualRange: NSRangePointer?) -> NSAttributedString? {
-	return nil
-}
-
-func validAttributesForMarkedText() -> [NSAttributedString.Key] {
-	return []
 }
 
