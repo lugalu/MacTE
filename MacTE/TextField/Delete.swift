@@ -25,7 +25,6 @@ class BaseDestructiveBehaviour: Undoable {
 	
 	
 	func redo(_ context: TextfieldContext) {
-		guard let commandContext else { return }
 	}
 }
 

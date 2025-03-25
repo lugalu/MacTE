@@ -31,10 +31,11 @@ class CommandStack {
 	
 	private init(){}
 	
-	func push(command: Command, with context: TextfieldContext) {
+	func push(command: Command, with context: TextfieldContext, isNew: Bool = true) {
+		guard !(command is NoOperation) else { return }
 		command.execute(context)
-		redoStack = []
-		
+
+		if isNew { redoStack = [] }
 		if command is Undoable {
 			undoStack.append(command as! Undo)
 		}
@@ -47,18 +48,16 @@ class CommandStack {
 		redoStack.append(command)
 	}
 	
-	func redo(with context: TextfieldContext){
+	func redo(with context: TextfieldContext) {
 		guard !redoStack.isEmpty else { return }
-//		let command = redoStack.removeFirst()
-		//guard let context = command.commandContext else { return }
-		//command.execute(context.originalContext, context.modification)
+		let command = redoStack.removeLast()
+		push(command: command, with: context, isNew: false)
 	}
 	
 }
 
 class NoOperation: Command {
 	static let shared = NoOperation()
-	
 	
 	private init() {}
 	
