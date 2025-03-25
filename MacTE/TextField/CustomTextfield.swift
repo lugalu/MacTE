@@ -175,6 +175,17 @@ class CustomTextfield: NSView, TextfieldContext {
 			break
 		}
 	}
+	
+	func makeStringPermutations(with array: [String]) -> [String] {
+		var result: Set<String> = []
+		
+		array.enumerated().forEach { idx, value in
+			result.insert(value)
+			result.insert(array[idx...].reduce("", +))
+		}
+		
+		return Array(result)
+	}
 		
 	override func mouseDown(with event: NSEvent) {
 		let idx = characterIndex(

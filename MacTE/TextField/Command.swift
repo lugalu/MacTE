@@ -56,3 +56,17 @@ class CommandStack {
 	
 }
 
+class NoOperation: Command {
+	static let shared = NoOperation()
+	
+	
+	private init() {}
+	
+	func execute(_ context: any TextfieldContext) {
+		return
+	}
+	
+	func execute(_ context: any TextfieldContext, _ inserting: String?) {
+		return
+	}
+}

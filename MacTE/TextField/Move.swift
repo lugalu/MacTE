@@ -34,10 +34,11 @@ class MoveUp: Command {
 		guard cursorIndex > 0, cursorIndex <= storage.length else { return }
 		
 		let numberOfGlyphs = layoutManager.numberOfGlyphs
-		let cursorLine = lineNumber(for: cursorIndex, context: context)
+		let cursorLine = layoutManager.lineNumber(for: cursorIndex)
 		
 		guard cursorLine > 1 ||
-				lineNumber(for: cursorIndex + 1, context: context) > 1 else {
+				layoutManager.lineNumber(for: cursorIndex + 1) > 1
+		else {
 			return
 		}
 		
@@ -86,8 +87,8 @@ class MoveDown: Command {
 		guard storage.length > 0 else { return }
 		
 		let numberOfGlyphs = layoutManager.numberOfGlyphs
-		let lineCount = lineNumber(for: numberOfGlyphs, context: context)
-		let cursorLine = lineNumber(for: cursorIndex, context: context)
+		let lineCount = layoutManager.lineNumber(for: numberOfGlyphs)
+		let cursorLine = layoutManager.lineNumber(for: cursorIndex)
 		
 		guard cursorLine < lineCount else { return }
 		
@@ -113,7 +114,6 @@ class MoveDown: Command {
 				if range.contains(cursorIndex) {
 					cursorRange = range
 				}
-				
 			}
 	}
 	

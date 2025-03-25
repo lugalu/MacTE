@@ -56,8 +56,8 @@ class Copy: Command {
 		guard let selectionRange = context.selectionRange else { return }
 		
 		let string = context.storage.string
-		let range = makeStringRange(string, range: selectionRange)
-		sendToPasteboard(String(string[range]))
+		let range = string.makeRange(with: selectionRange)
+		NSPasteboard.fill(with: String(string[range]))
 	}
 	
 	func execute(_ context: any TextfieldContext, _ inserting: String?) {
@@ -71,8 +71,8 @@ class Cut: Command, Undoable {
 		guard let selectionRange = context.selectionRange else { return }
 		
 		let string = context.storage.string
-		let range = makeStringRange(string, range: selectionRange)
-		sendToPasteboard(String(string[range]))
+		let range = string.makeRange(with: selectionRange)
+		NSPasteboard.fill(with: String(string[range]))
 		
 		_ = deleteSelection(context)
 	}

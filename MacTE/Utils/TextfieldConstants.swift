@@ -8,7 +8,6 @@ struct TextfieldConstants {
 	static let padding: CGFloat = 8
 	private typealias System = NSEvent.ModifierFlags
 	
-	//MARK: KeyCodes
 	//Delete
 	static let backspace = "deleteBackward:"
 	static let delete = "deleteForward:"
@@ -31,10 +30,7 @@ struct TextfieldConstants {
 	static let redo = System.getName(for: .command) +
 					  System.getName(for: .shift) +
 					  "z"
-	// deleteBackwardByDecomposingPreviousCharacter = ctr + backspace // future impl.
-	// move whole word to left or right
-	
-	//MARK: Command Dict
+
 	static let commands: [String: (_: TextfieldContext?) -> Command] = [
 		backspace: { _ in Backspace() },
 		delete: { _ in Delete() } ,
@@ -61,19 +57,4 @@ struct TextfieldConstants {
 		}
 	]
 	
-}
-
-class NoOperation: Command {
-	static let shared = NoOperation()
-	
-	
-	private init() {}
-	
-	func execute(_ context: any TextfieldContext) {
-		return
-	}
-	
-	func execute(_ context: any TextfieldContext, _ inserting: String?) {
-		return
-	}
 }
