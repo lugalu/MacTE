@@ -15,20 +15,8 @@ struct ConstructiveUndoData {
 }
 
 /*
- TODO: Check if the Base OP, UNDO, and REDO were a success if so we append to the stacks!
-
- TODO: list of following for UNDO
- - Cut, Delete, Backspace, WordBackspace, WordDelete, DeleteBeggining of line we reinsert the text, should be easy
-	- can be achieved by creating a struct that stores the cursor position and the removed string, can be reutilized by all
- - Insert, Paste, NewLine
-	- delete the inserted text, basically the same as above
- - Insert Past, Newline with Selection,
-  - First we delete the insert then reinsert the previous text, the struct from above can contain the details for this OP, we just change context based on the selection!
- 
- TODO: clean REDO func as a requirement after implementing all ops
- TODO: figure out how to pipe to REDO
+ TODO: Insertion as a Command, is more complex due because of the arguments that are recieved by the system command. So refactor of the TextfieldConstants dict is probably needed
  */
-
 
 class CustomTextfield: NSView, TextfieldContext {
 	override var acceptsFirstResponder: Bool { true }

@@ -23,8 +23,6 @@ class BaseDestructiveBehaviour: Undoable {
 		)
 		context.cursorIndex = commandContext.startCursorPos + commandContext.deletedString.count
 	}
-	
-	func redo(_ context: TextfieldContext) {}
 }
 
 //MARK: Backspace Operations

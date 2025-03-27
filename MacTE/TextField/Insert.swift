@@ -31,7 +31,12 @@ class BaseConstructiveBehaviour: Undoable {
 		)
 	}
 	
-	func redo(_ context: TextfieldContext) {}
+}
+
+
+//TODO: finish This
+class Insert {
+	
 }
 
 class NewLine: BaseConstructiveBehaviour, Command {
@@ -138,10 +143,6 @@ class Cut: Command, Undoable {
 		)
 		
 		self.commandContext = nil
-		
-	}
-	
-	func redo(_ context: TextfieldContext) {
 		
 	}
 }
