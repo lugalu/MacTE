@@ -2,30 +2,64 @@
 
 import AppKit
 
-class NewLine: Command, Undoable {
+class BaseConstructiveBehaviour: Undoable {
+	var commandContext: DestructiveUndoData? = nil
 	
+	func undo(_ context: TextfieldContext) {
+		guard let commandContext else { return }
+		context.selectionRange = nil
+		ExecuteDestructiveUndo(commandContext: commandContext, context: context)
+		
+		self.commandContext = DestructiveUndoData(
+			startCursorPos: context.cursorIndex,
+			deletedString: commandContext.deletedString
+		)
+	}
+	
+	func ExecuteDestructiveUndo(commandContext: DestructiveUndoData, context: any TextfieldContext) {
+		let range = NSMakeRange(
+			commandContext.startCursorPos,
+			commandContext.deletedString.count
+		)
+		
+		context.storage.deleteCharacters(in: range)
+		context.cursorIndex = commandContext.startCursorPos - commandContext.deletedString.count
+		
+		self.commandContext = DestructiveUndoData(
+			startCursorPos: context.cursorIndex,
+			deletedString: commandContext.deletedString
+		)
+	}
+	
+	func redo(_ context: TextfieldContext) {}
+}
+
+class NewLine: BaseConstructiveBehaviour, Command {
+
 	func execute(_ context: any TextfieldContext) {
 		_ = deleteSelection(context)
 		
-		let newLine = NSAttributedString(string: "\n")
+		let newLine = "\n"
+		
+		commandContext = DestructiveUndoData(
+			startCursorPos: context.cursorIndex,
+			deletedString: newLine
+		)
+		
 		context.storage.insertOrAppend(at: context.cursorIndex, with: newLine)
 		context.cursorIndex += 1
+		
 	}
 	
 	func execute(_ context: any TextfieldContext, _ : String?) {
 		execute(context)
 	}
 	
-	func undo(_ context: TextfieldContext) {
-		
-	}
 	
-	func redo(_ context: TextfieldContext) {
-		
-	}
+
 }
 
-class Paste: Command, Undoable {
+class Paste: BaseConstructiveBehaviour, Command {
 	
 	func execute(_ context: any TextfieldContext) {
 		guard let original = NSPasteboard.general.string(forType: .string)
@@ -33,21 +67,19 @@ class Paste: Command, Undoable {
 		
 		_ = deleteSelection(context)
 		
-		let string = NSAttributedString(string: original)
-		context.storage.insertOrAppend(at: context.cursorIndex, with: string)
-		context.cursorIndex += string.length
+
+		context.storage.insertOrAppend(at: context.cursorIndex, with: original)
+		context.cursorIndex += original.count
+		
+		commandContext = DestructiveUndoData(
+			startCursorPos: context.cursorIndex,
+			deletedString: original
+		)
+		
 	}
 	
 	func execute(_ context: any TextfieldContext, _ inserting: String?) {
 		execute(context)
-	}
-	
-	func undo(_ context: TextfieldContext) {
-		
-	}
-	
-	func redo(_ context: TextfieldContext) {
-		
 	}
 }
 
@@ -66,13 +98,20 @@ class Copy: Command {
 }
 
 class Cut: Command, Undoable {
+	var commandContext: DestructiveUndoData? = nil
 	
 	func execute(_ context: any TextfieldContext) {
 		guard let selectionRange = context.selectionRange else { return }
 		
 		let string = context.storage.string
 		let range = string.makeRange(with: selectionRange)
-		NSPasteboard.fill(with: String(string[range]))
+		let affectedString = String(string[range])
+		NSPasteboard.fill(with: affectedString)
+		
+		commandContext = DestructiveUndoData(
+			startCursorPos: selectionRange.location,
+			deletedString: affectedString
+		)
 		
 		_ = deleteSelection(context)
 	}
@@ -82,6 +121,23 @@ class Cut: Command, Undoable {
 	}
 	
 	func undo(_ context: TextfieldContext) {
+		guard let commandContext else { return }
+		
+		context.storage
+			.insertOrAppend(
+				at: commandContext.startCursorPos,
+				with: commandContext.deletedString
+			)
+		
+		context.cursorIndex = commandContext.startCursorPos +
+		commandContext.deletedString.count
+		
+		context.selectionRange = NSMakeRange(
+			commandContext.startCursorPos,
+			commandContext.deletedString.count
+		)
+		
+		self.commandContext = nil
 		
 	}
 	

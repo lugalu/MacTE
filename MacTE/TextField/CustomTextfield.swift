@@ -25,7 +25,7 @@ struct ConstructiveUndoData {
  - Insert Past, Newline with Selection,
   - First we delete the insert then reinsert the previous text, the struct from above can contain the details for this OP, we just change context based on the selection!
  
- 
+ TODO: clean REDO func as a requirement after implementing all ops
  TODO: figure out how to pipe to REDO
  */
 

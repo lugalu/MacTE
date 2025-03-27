@@ -7,6 +7,7 @@ class BaseDestructiveBehaviour: Undoable {
 	
 	func undo(_ context: TextfieldContext) {
 		guard let commandContext else { return }
+		context.selectionRange = nil
 		ExecuteDestructiveUndo(commandContext: commandContext, context: context)
 
 		self.commandContext = DestructiveUndoData(
@@ -23,9 +24,7 @@ class BaseDestructiveBehaviour: Undoable {
 		context.cursorIndex = commandContext.startCursorPos + commandContext.deletedString.count
 	}
 	
-	
-	func redo(_ context: TextfieldContext) {
-	}
+	func redo(_ context: TextfieldContext) {}
 }
 
 //MARK: Backspace Operations
