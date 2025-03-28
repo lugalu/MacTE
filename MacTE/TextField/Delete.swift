@@ -3,20 +3,20 @@
 import AppKit
 
 class BaseDestructiveBehaviour: Undoable {
-	var commandContext: DestructiveUndoData? = nil
+	var commandContext: UndoData? = nil
 	
 	func undo(_ context: TextfieldContext) {
 		guard let commandContext else { return }
 		context.selectionRange = nil
 		ExecuteDestructiveUndo(commandContext: commandContext, context: context)
 
-		self.commandContext = DestructiveUndoData(
+		self.commandContext = UndoData(
 			startCursorPos: context.cursorIndex,
 			deletedString: commandContext.deletedString
 		)
 	}
 	
-	func ExecuteDestructiveUndo(commandContext: DestructiveUndoData, context: any TextfieldContext) {
+	func ExecuteDestructiveUndo(commandContext: UndoData, context: any TextfieldContext) {
 		context.storage.insertOrAppend(
 			at: commandContext.startCursorPos,
 			with: commandContext.deletedString
@@ -32,7 +32,7 @@ class Backspace: BaseDestructiveBehaviour, Command {
 		let (didDelete, deletedString) = deleteSelection(context)
 		guard !didDelete else {
 			if let deletedString {
-				commandContext = DestructiveUndoData(
+				commandContext = UndoData(
 					startCursorPos: context.cursorIndex,
 					deletedString: deletedString
 				)
@@ -49,7 +49,7 @@ class Backspace: BaseDestructiveBehaviour, Command {
 		let deleteRange = NSRange(location: context.cursorIndex - 1, length: 1)
 		context.storage.deleteCharacters(in: deleteRange)
 		context.cursorIndex -= 1
-		commandContext = DestructiveUndoData(
+		commandContext = UndoData(
 			startCursorPos: context.cursorIndex,
 			deletedString: char
 		)
@@ -84,7 +84,7 @@ class WordBackspace: BaseDestructiveBehaviour, Command {
 		let targetStr = NSString(string: context.storage.string)
 			.substring(with: deletionRange)
 		
-		commandContext = DestructiveUndoData(
+		commandContext = UndoData(
 			startCursorPos: difference,
 			deletedString: targetStr
 		)
@@ -107,7 +107,7 @@ class Delete: BaseDestructiveBehaviour, Command {
 		let (didDelete, deletedString) = deleteSelection(context)
 		guard !didDelete else {
 			if let deletedString {
-				commandContext = DestructiveUndoData(
+				commandContext = UndoData(
 					startCursorPos: context.cursorIndex,
 					deletedString: deletedString
 				)
@@ -123,7 +123,7 @@ class Delete: BaseDestructiveBehaviour, Command {
 		let idx = str.index(str.startIndex, offsetBy: context.cursorIndex)
 		let char = String(str[idx])
 		
-		commandContext = DestructiveUndoData(
+		commandContext = UndoData(
 			startCursorPos: context.cursorIndex,
 			deletedString: char
 		)
@@ -161,7 +161,7 @@ class WordDelete: BaseDestructiveBehaviour, Command {
 		let targetStr = NSString(string: context.storage.string)
 			.substring(with: deletionRange)
 		
-		commandContext = DestructiveUndoData(
+		commandContext = UndoData(
 			startCursorPos: context.cursorIndex,
 			deletedString: targetStr
 		)
@@ -207,7 +207,7 @@ class DeleteToBegginingOfLine: BaseDestructiveBehaviour, Command {
 		context.cursorIndex = max(abs(cursorIndex - lenght), 0)
 		
 		let phrase = String(string[idx...upperBound])
-		commandContext = DestructiveUndoData(
+		commandContext = UndoData(
 			startCursorPos: context.cursorIndex,
 			deletedString: phrase
 		)

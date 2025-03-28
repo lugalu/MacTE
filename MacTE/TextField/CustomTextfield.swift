@@ -3,7 +3,7 @@
 import AppKit
 
 
-struct DestructiveUndoData {
+struct UndoData {
 	let startCursorPos: Int
 	let deletedString: String
 }
@@ -11,7 +11,7 @@ struct DestructiveUndoData {
 struct ConstructiveUndoData {
 	let cursorPosition: Int
 	let insertedString: Int
-	let removedString: DestructiveUndoData?
+	let removedString: UndoData?
 }
 
 /*
@@ -207,22 +207,16 @@ class CustomTextfield: NSView, TextfieldContext {
 extension CustomTextfield: NSTextInputClient {
 	
 	func insertText(_ string: Any, replacementRange: NSRange) {
-		guard let string = string as? String else {
+		guard let string = string as? String,
+			  let command = TextfieldConstants.commands[TextfieldConstants.insert]
+		else {
 			return
 		}
 		
-		_ = deleteSelection(self)
-		
-		let attributedString = NSAttributedString(string: string)
-		if replacementRange.location != NSNotFound {
-			storage.replaceCharacters(in: replacementRange,
-								   with: attributedString
-			)
-			return
-		}
-		
-		storage.insert(attributedString, at: cursorIndex)
-		cursorIndex += string.count
+		CommandStack.shared.push(
+			command: command(self),
+			with: self,
+			string: string)
 	}
 	
 

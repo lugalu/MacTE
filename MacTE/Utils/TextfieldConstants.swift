@@ -22,6 +22,7 @@ struct TextfieldConstants {
 	static let moveDown = "moveDown:"
 	
 	//Insert
+	static let insert = "Insert"
 	static let addNewLine = "insertNewline:"
 	static let paste = System.getName(for: .command) + "v"
 	static let copy = System.getName(for: .command) + "c"
@@ -32,6 +33,7 @@ struct TextfieldConstants {
 					  "z"
 
 	static let commands: [String: (_: TextfieldContext?) -> Command] = [
+		insert: { _ in Insert() },
 		backspace: { _ in Backspace() },
 		delete: { _ in Delete() } ,
 		wordBackspace: { _ in WordBackspace() },
