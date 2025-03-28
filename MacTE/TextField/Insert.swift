@@ -33,8 +33,6 @@ class BaseConstructiveBehaviour: Undoable {
 	
 }
 
-
-//TODO: finish This
 class Insert: Command, Undoable  {
 	var commandContext: UndoData? = nil
 	var replacedContext: UndoData? = nil

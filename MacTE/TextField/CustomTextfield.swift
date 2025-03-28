@@ -8,14 +8,9 @@ struct UndoData {
 	let deletedString: String
 }
 
-struct ConstructiveUndoData {
-	let cursorPosition: Int
-	let insertedString: Int
-	let removedString: UndoData?
-}
 
 /*
- TODO: Insertion as a Command, is more complex due because of the arguments that are recieved by the system command. So refactor of the TextfieldConstants dict is probably needed
+ TODO: Selection as a command or other logic for selection ranges when undoing
  */
 
 class CustomTextfield: NSView, TextfieldContext {
@@ -203,94 +198,3 @@ class CustomTextfield: NSView, TextfieldContext {
 		needsDisplay = true
 	}
 }
-
-extension CustomTextfield: NSTextInputClient {
-	
-	func insertText(_ string: Any, replacementRange: NSRange) {
-		guard let string = string as? String,
-			  let command = TextfieldConstants.commands[TextfieldConstants.insert]
-		else {
-			return
-		}
-		
-		CommandStack.shared.push(
-			command: command(self),
-			with: self,
-			string: string)
-	}
-	
-
-	
-	func firstRect(forCharacterRange range: NSRange, actualRange: NSRangePointer?) -> NSRect {
-		return layoutManager
-			.lineFragmentRect(
-				forGlyphAt: range.lowerBound,
-				effectiveRange: actualRange
-			)
-	}
-	
-	func characterIndex(for point: NSPoint) -> Int {
-		
-		let pointer: UnsafeMutablePointer<CGFloat> = .allocate(capacity: 1)
-		pointer.pointee = 1
-		defer{
-			pointer.deallocate()
-		}
-		
-		var idx = layoutManager
-			.characterIndex(
-				for: point,
-				in: container,
-				fractionOfDistanceBetweenInsertionPoints: pointer
-			)
-		
-		idx += pointer.pointee >= 0.5 ? 1 : 0
-		
-		return idx
-	}
-	
-	override func doCommand(by selector: Selector) {
-		let commandKey = selector.description
-		guard let command = TextfieldConstants.commands[commandKey] else {
-			return
-		}
-		
-		pushCommandToStack(command: command(self))
-	}
-	
-	func pushCommandToStack(command: Command) {
-		CommandStack.shared.push(command: command, with: self)
-	}
-	
-	
-	//Unused
-	func setMarkedText(
-		_ string: Any,
-		selectedRange: NSRange,
-		replacementRange: NSRange
-	) {}
-
-	
-	func unmarkText() {}
-	
-	func selectedRange() -> NSRange {
-		return .init()
-	}
-	
-	func markedRange() -> NSRange {
-		return .init()
-	}
-	
-	func hasMarkedText() -> Bool {
-		return false
-	}
-	
-	func attributedSubstring(forProposedRange range: NSRange, actualRange: NSRangePointer?) -> NSAttributedString? {
-		return nil
-	}
-	
-	func validAttributesForMarkedText() -> [NSAttributedString.Key] {
-		return []
-	}
-}
-
