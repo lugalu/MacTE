@@ -6,7 +6,7 @@ import AppKit
 struct UndoData {
 	let startCursorPos: Int
 	let deletedString: String
-
+}
 
 class CustomTextfield: NSView, TextfieldContext {
 	override var acceptsFirstResponder: Bool { true }
@@ -26,7 +26,6 @@ class CustomTextfield: NSView, TextfieldContext {
 			needsDisplay = true
 		}
 	}
-	
 	
 	override init(frame frameRect: NSRect) {
 		super.init(frame: frameRect)
