@@ -5,7 +5,9 @@ import AppKit
 class MoveLeft: Command {
 	func execute(_ context: any TextfieldContext) {
 		guard context.cursorIndex > 0 else { return }
+		context.selectionRange = nil
 		context.cursorIndex -= 1
+		
 	}
 	
 	func execute(_ context: any TextfieldContext, _ : String?) {
@@ -17,6 +19,7 @@ class MoveLeft: Command {
 class MoveRight: Command {
 	func execute(_ context: any TextfieldContext) {
 		guard context.cursorIndex < context.storage.length else { return }
+		context.selectionRange = nil
 		context.cursorIndex += 1
 	}
 	
@@ -41,6 +44,7 @@ class MoveUp: Command {
 		else {
 			return
 		}
+		
 		
 		var previousLine:NSRange? = nil
 		layoutManager.enumerateLineFragments(
@@ -67,6 +71,7 @@ class MoveUp: Command {
 											lastLineEnd
 				)
 				
+				context.selectionRange = nil
 				stop.pointee = true
 				return
 			}
@@ -91,6 +96,7 @@ class MoveDown: Command {
 		let cursorLine = layoutManager.lineNumber(for: cursorIndex)
 		
 		guard cursorLine < lineCount else { return }
+
 		
 		var cursorRange: NSRange? = nil
 		layoutManager
@@ -108,6 +114,7 @@ class MoveDown: Command {
 					)
 					cursorRange = nil
 					stop.pointee = true
+					context.selectionRange = nil
 					return
 				}
 				
