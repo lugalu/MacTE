@@ -6,12 +6,7 @@ import AppKit
 struct UndoData {
 	let startCursorPos: Int
 	let deletedString: String
-}
 
-
-/*
- TODO: Selection as a command or other logic for selection ranges when undoing
- */
 
 class CustomTextfield: NSView, TextfieldContext {
 	override var acceptsFirstResponder: Bool { true }
