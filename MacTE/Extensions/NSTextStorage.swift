@@ -15,5 +15,4 @@ extension NSTextStorage {
 			self.append(str)
 		}
 	}
-	
 }

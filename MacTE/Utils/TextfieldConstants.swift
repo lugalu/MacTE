@@ -8,7 +8,6 @@ struct TextfieldConstants {
 	static let padding: CGFloat = 8
 	private typealias System = NSEvent.ModifierFlags
 	
-	//MARK: KeyCodes
 	//Delete
 	static let backspace = "deleteBackward:"
 	static let delete = "deleteForward:"
@@ -23,6 +22,7 @@ struct TextfieldConstants {
 	static let moveDown = "moveDown:"
 	
 	//Insert
+	static let insert = "Insert"
 	static let addNewLine = "insertNewline:"
 	static let paste = System.getName(for: .command) + "v"
 	static let copy = System.getName(for: .command) + "c"
@@ -31,38 +31,31 @@ struct TextfieldConstants {
 	static let redo = System.getName(for: .command) +
 					  System.getName(for: .shift) +
 					  "z"
-	// deleteBackwardByDecomposingPreviousCharacter = ctr + backspace // future impl.
-	
-	//MARK: Command Dict
-	static let commands: [String: () -> Command] = [
-		backspace: { Backspace() },
-		delete: { Delete() } ,
-		wordBackspace: { WordBackspace() },
-		wordDelete: { WordDelete() },
-		deleteToBeginningOfLine: { DeleteToBegginingOfLine() },
-		moveLeft: { MoveLeft() },
-		moveRight: { MoveRight() },
-		moveUp: { MoveUp() },
-		moveDown: { MoveDown() },
-		addNewLine: { NewLine() },
-		paste : {
-			return Paste()
+
+	static let commands: [String: (_: TextfieldContext?) -> Command] = [
+		insert: { _ in Insert() },
+		backspace: { _ in Backspace() },
+		delete: { _ in Delete() } ,
+		wordBackspace: { _ in WordBackspace() },
+		wordDelete: { _ in WordDelete() },
+		deleteToBeginningOfLine: { _ in DeleteToBegginingOfLine() },
+		moveLeft: { _ in MoveLeft() },
+		moveRight: { _ in MoveRight() },
+		moveUp: { _ in MoveUp() },
+		moveDown: { _ in MoveDown() },
+		addNewLine: { _ in NewLine() },
+		paste : { _ in Paste() },
+		copy : { _ in Copy() },
+		cut : { _ in Cut() },
+		undo: { context in
+			guard let context else { return NoOperation.shared }
+			CommandStack.shared.undo(with: context)
+			return NoOperation.shared
 		},
-		copy : {
-			return Copy()
-		},
-		cut : {
-			return Cut()
-		},
-		undo: {
-			//TODO: implement
-			CommandStack.shared.undo()
-			return NewLine()
-		},
-		redo: {
-			//TODO: Implement
-			CommandStack.shared.redo()
-			return NewLine()
+		redo: { context in
+			guard let context else { return NoOperation.shared }
+			CommandStack.shared.redo(with: context)
+			return NoOperation.shared
 		}
 	]
 	
