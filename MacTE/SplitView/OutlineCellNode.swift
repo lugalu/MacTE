@@ -14,7 +14,12 @@ class OutlineCellNode: NSTableCellView {
 		return txt
 	}()
 	
-	func configure(name: String) {
+	var node: FileSystemNode?
+	
+	func configure(node: FileSystemNode) {
+		self.node = node
+		label.stringValue = node.name
+		
 		if label.superview == nil {
 			self.addSubview(label)
 			
@@ -26,6 +31,5 @@ class OutlineCellNode: NSTableCellView {
 			]
 			NSLayoutConstraint.activate(constraints)
 		}
-		label.stringValue = name
 	}
 }

@@ -4,7 +4,6 @@ import AppKit
 
 
 extension CustomTextfield: NSTextInputClient {
-	
 	func insertText(_ string: Any, replacementRange: NSRange) {
 		guard let string = string as? String,
 			  let command = TextfieldConstants.commands[TextfieldConstants.insert]

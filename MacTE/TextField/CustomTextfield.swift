@@ -2,7 +2,6 @@
 
 import AppKit
 
-
 struct UndoData {
 	let startCursorPos: Int
 	let deletedString: String
@@ -190,5 +189,17 @@ class CustomTextfield: NSView, TextfieldContext {
 		)
 
 		needsDisplay = true
+	}
+	
+	
+	func getTextHash() -> Int {
+		return storage.string.hashValue
+	}
+	
+	func setNewText(_ string: String) {
+		let range = NSMakeRange(0, storage.string.count)
+		storage.deleteCharacters(in: range)
+		storage.insertOrAppend(at: 0, with: string)
+		cursorIndex = 0
 	}
 }
