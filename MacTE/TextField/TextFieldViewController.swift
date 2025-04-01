@@ -20,8 +20,6 @@ class TextFieldViewController: NSViewController, TextFieldCommunication {
 	}
 	
 	func loadFile(with fileURL: URL) {
-		//TODO: asks the user to save the current file if needed,then we change the file!
-		//TODO: it also should ask if the contents written that has no file, should be saved somewhere
 		guard
 			fileURL != openFileURL,
 			let textView,
@@ -107,6 +105,9 @@ class TextFieldViewController: NSViewController, TextFieldCommunication {
 	}
 	
 	func showErrorAlert() {
-		print("failed to write the file")
+		let alert = NSAlert()
+		alert.messageText = "Error saving file please try again"
+		alert.alertStyle = .critical
+		alert.runModal()
 	}
 }
