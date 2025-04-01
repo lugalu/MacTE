@@ -31,6 +31,7 @@ struct TextfieldConstants {
 	static let redo = System.getName(for: .command) +
 					  System.getName(for: .shift) +
 					  "z"
+	static let save = System.getName(for: .command) + "s"
 
 	static let commands: [String: (_: TextfieldContext?) -> Command] = [
 		insert: { _ in Insert() },
@@ -55,6 +56,10 @@ struct TextfieldConstants {
 		redo: { context in
 			guard let context else { return NoOperation.shared }
 			CommandStack.shared.redo(with: context)
+			return NoOperation.shared
+		},
+		save: { context in
+			context?.save()
 			return NoOperation.shared
 		}
 	]
