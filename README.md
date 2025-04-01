@@ -1,6 +1,6 @@
 # MacTE - MacOS Text Editor
 This is a Proof of Concept (PoC) macOS app focused on creating a fairly basic text editor, the idealization of this project was to learn how text is handled under the hood within Apple's eco-system. this was acomplished by using the NSTextStorage, NSTextInputClient, NSTextContainer, NSLayoutManager, and NSTextInsertionIndicator.
-
+![](https://i.imgur.com/F1ygNae.png)
 ## Features
 - Basic text insertion and removal
 - Basic Text selection with a _mouse_
