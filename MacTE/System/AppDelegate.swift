@@ -13,7 +13,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSToolbarItemValidation {
 			backing: .buffered,
 			defer: false
 		)
-		window.title = "Test"
+		window.title = "MacTE"
 		
 		makeToolbar(for: window)
 		
