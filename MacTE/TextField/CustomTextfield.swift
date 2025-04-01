@@ -2,16 +2,10 @@
 
 import AppKit
 
-
 struct UndoData {
 	let startCursorPos: Int
 	let deletedString: String
 }
-
-
-/*
- TODO: Selection as a command or other logic for selection ranges when undoing
- */
 
 class CustomTextfield: NSView, TextfieldContext {
 	override var acceptsFirstResponder: Bool { true }
@@ -24,6 +18,19 @@ class CustomTextfield: NSView, TextfieldContext {
 	
 	var selectionRange: NSRange? = nil
 	var selectionPath: NSBezierPath? = nil
+	var delegate: TextFieldCommunication? = nil
+	
+	var textHash: Int {
+		storage.string.hashValue
+	}
+	
+	var isEmpty: Bool {
+		storage.string.isEmpty
+	}
+	
+	var text: String {
+		storage.string
+	}
 
 	
 	var cursorIndex = 0 {
@@ -31,7 +38,6 @@ class CustomTextfield: NSView, TextfieldContext {
 			needsDisplay = true
 		}
 	}
-	
 	
 	override init(frame frameRect: NSRect) {
 		super.init(frame: frameRect)
@@ -73,95 +79,12 @@ class CustomTextfield: NSView, TextfieldContext {
 		).applying(.init(translationX: padding, y: padding))
 	}
 	
-	override func draw(_ dirtyRect: NSRect) {
-		super.draw(dirtyRect)
-		NSColor.textBackgroundColor.setFill()
-		dirtyRect.fill()
-		
-		storage.foregroundColor = NSColor.textColor
-		
-		let padding = TextfieldConstants.padding
-		container.size = bounds.insetBy(dx: padding, dy: padding).size
-		
-		let glyphs = layoutManager.glyphRange(forBoundingRect: bounds,
-											  in: container)
-		
-		let paddingPoint = CGPoint(x: padding, y: padding)
-		layoutManager.drawBackground(forGlyphRange: glyphs, at: paddingPoint)
-		layoutManager.drawGlyphs(forGlyphRange: glyphs, at: paddingPoint)
-		
-		cursor.setFrameOrigin(getCursorRect().origin)
-		cursor.setFrameSize(.init(width: 100, height: cursor.frame.height))
-		
-		drawSelectionBox()
-	}
-	
-	func drawSelectionBox() {
-		guard let selectionRange, selectionRange.length != 0 else {
-			NSColor.clear.setFill()
-			selectionPath?.fill()
-			selectionPath = nil
-			return
-		}
-		
-		var rect = layoutManager
-			.boundingRect(forGlyphRange: selectionRange, in: container)
-		rect.origin = rect
-			.origin
-			.applying(
-				.init(translationX: TextfieldConstants.padding,
-					  y: TextfieldConstants.padding))
-		
-		NSColor.selectedTextBackgroundColor
-			.withAlphaComponent(0.3)
-			.setFill()
-		selectionPath = NSBezierPath(rect: rect)
-		selectionPath?.fill()
-	
-	}
-	
-	override func becomeFirstResponder() -> Bool {
-		cursor.displayMode = .automatic
-		
-		needsDisplay = true
-		return super.becomeFirstResponder()
-	}
-	
-	override func resignFirstResponder() -> Bool {
-		cursor.displayMode = .hidden
-		needsDisplay = true
-		return super.resignFirstResponder()
-	}
-	
-	override func keyDown(with event: NSEvent) {
-		self.inputContext?.handleEvent(event)
-		handleCustomEvents(event)
-		
-	}
-	
-	func handleCustomEvents(_ event: NSEvent) {
-		let eventModifiers = event.modifierFlags.getNames()
-		guard !eventModifiers.isEmpty,
-			  let key = event.charactersIgnoringModifiers?.lowercased() else {
-			return
-		}
-
-		let commandPossibilities = makeStringPermutations(with: eventModifiers)
-			.sorted { $0.count > $1.count }
-
-		for cmd in commandPossibilities {
-			guard let command = TextfieldConstants.commands[cmd + key] else {
-				continue
-			}
-			
-			pushCommandToStack(command: command(self))
-			break
-		}
+	func save() {
+		delegate?.saveIfNeeded()
 	}
 	
 	func makeStringPermutations(with array: [String]) -> [String] {
 		var result: Set<String> = []
-		
 		array.enumerated().forEach { idx, value in
 			result.insert(value)
 			result.insert(array[idx...].reduce("", +))
@@ -169,32 +92,18 @@ class CustomTextfield: NSView, TextfieldContext {
 		
 		return Array(result)
 	}
-		
-	override func mouseDown(with event: NSEvent) {
-		let idx = characterIndex(
-			for: windowToPoint(with: event.locationInWindow))
-		
-		self.cursorIndex = idx
-		selectionRange = nil
+	
+	
+	func setNewText(_ string: String) {
+		let range = NSMakeRange(0, storage.string.count)
+		storage.deleteCharacters(in: range)
+		storage.insertOrAppend(at: 0, with: string)
+		cursorIndex = 0
 	}
 	
-	func windowToPoint(with event: NSPoint) -> NSPoint {
-		var point = convert(event, from: nil)
-		point.y = max(0, point.y - TextfieldConstants.padding)
-		point.x = max(0, point.x - TextfieldConstants.padding)
-		
-		return point
-	}
 	
-	override func mouseDragged(with event: NSEvent) {
-		let idx = characterIndex(
-			for: windowToPoint(with: event.locationInWindow))
-
-		selectionRange = NSMakeRange(
-			min(idx, cursorIndex),
-			abs(idx - cursorIndex)
-		)
-
-		needsDisplay = true
-	}
 }
+
+
+
+

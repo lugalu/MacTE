@@ -16,7 +16,7 @@ class CommandStack {
 		
 		command.execute(context)
 
-		if isNew { redoStack = [] }
+		if isNew { redoStack.removeAll() }
 		if command is Undoable {
 			undoStack.append(command as! Undo)
 		}
@@ -27,7 +27,7 @@ class CommandStack {
 		
 		command.execute(context, string)
 
-		if isNew { redoStack = [] }
+		if isNew { redoStack.removeAll() }
 		if command is Undoable {
 			undoStack.append(command as! Undo)
 		}
@@ -56,6 +56,11 @@ class CommandStack {
 		}
 		
 		push(command: command, with: context, isNew: false)
+	}
+	
+	func clear() {
+		redoStack.removeAll()
+		undoStack.removeAll()
 	}
 	
 }

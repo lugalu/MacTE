@@ -19,6 +19,8 @@ protocol TextfieldContext: AnyObject {
 	var layoutManager: NSLayoutManager { get }
 	var selectionRange: NSRange? { get set }
 	var selectionPath: NSBezierPath? { get }
+	
+	func save()
 }
 
 
